@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/factoryops-cmms.Tests/">
+    <Project Path="factoryops-cmms.Tests/factoryops-cmms.Tests.csproj" />
+  </Folder>
+  <Project Path="factoryops-cmms.API/factoryops-cmms.API.csproj" />
+  <Project Path="factoryops-cmms.Application/factoryops-cmms.Application.csproj" />
+  <Project Path="factoryops-cmms.Domain/factoryops-cmms.Domain.csproj" />
+  <Project Path="factoryops-cmms.Infrastructure/factoryops-cmms.Infrastructure.csproj" />
+</Solution>

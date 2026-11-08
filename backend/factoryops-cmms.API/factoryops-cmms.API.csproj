@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>FactoryOps.API</RootNamespace>
+    <AssemblyName>FactoryOps.API</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\factoryops-cmms.Application\factoryops-cmms.Application.csproj" />
+    <ProjectReference Include="..\factoryops-cmms.Infrastructure\factoryops-cmms.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
