@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import type { NavItem } from '@/config/navigation'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
@@ -11,7 +12,7 @@ import { UserMenu } from './UserMenu'
  * column, bottom navigation within thumb reach. On wide screens the column stays phone-width
  * so the experience does not stretch into a sparse desktop page.
  */
-export function MobileShell({ items, profilePath, highlight }: { items: NavItem[]; profilePath?: string; highlight?: string }) {
+export function MobileShell({ items, profilePath, highlight, headerAction }: { items: NavItem[]; profilePath?: string; highlight?: string; headerAction?: ReactNode }) {
   const showNav = items.length > 1
   return (
     <div className="min-h-dvh bg-background">
@@ -20,6 +21,7 @@ export function MobileShell({ items, profilePath, highlight }: { items: NavItem[
           <Logo />
           <DemoBadge />
           <div className="ml-auto flex items-center gap-1">
+            {headerAction}
             <NotificationBell />
             <UserMenu profilePath={profilePath} compact />
           </div>

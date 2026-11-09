@@ -170,6 +170,30 @@ export interface MaintenanceRequest {
   reviewedById?: Id
   reviewedAtUtc?: IsoDateTime
   reviewNote?: string
+  /**
+   * Read-only view of the resulting work order, projected by the server so requesters can
+   * follow the repair without access to work orders themselves.
+   */
+  progress?: RequestProgress
+}
+
+export interface RequestProgress {
+  workOrderNumber: string
+  status: WorkOrderStatus
+  technicianName?: string
+  scheduledDate?: IsoDate
+  startedAtUtc?: IsoDateTime
+  completedAtUtc?: IsoDateTime
+}
+
+/** Open problem already known on a machine, shown to reporters to avoid duplicate reports. */
+export interface ActiveIssue {
+  kind: 'request' | 'workOrder'
+  number: string
+  summary: string
+  status: RequestStatus | WorkOrderStatus
+  sinceUtc: IsoDateTime
+  reportedByMe: boolean
 }
 
 export interface PmSchedule {

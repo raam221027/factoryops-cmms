@@ -1,12 +1,35 @@
 import { hasPermission } from '@/domain/permissions'
-import type { MaintenanceRequest, WorkOrder } from '@/domain/types'
-import { dueDateForPriority } from '@/domain/workOrderRules'
+import type { ActiveIssue, MaintenanceRequest, WorkOrder } from '@/domain/types'
+import { dueDateForPriority, isOpen } from '@/domain/workOrderRules'
 import { newId } from '@/lib/id'
 import { PROBLEM_CATEGORY_LABELS } from '@/domain/enums'
 import type { RequestService } from '../contracts'
 import { ApiError } from '../errors'
 import { addLog, nextRequestNumber, nextWorkOrderNumber, notifyAssignment, notifyRole, notifyUser, nowIso, userName } from './effects'
+import type { DemoDb } from './schema'
 import { actor, authorize, findOrThrow, read, write } from './store'
+
+/** Attaches the progress of the resulting work order, as the API would project it. */
+function withProgress(d: DemoDb, req: MaintenanceRequest): MaintenanceRequest {
+  const wo = req.workOrderId ? d.workOrders.find((w) => w.id === req.workOrderId) : undefined
+  if (!wo) return req
+  return {
+    ...req,
+    progress: {
+      workOrderNumber: wo.number,
+      status: wo.status,
+      technicianName: wo.assigneeId ? userName(d, wo.assigneeId) : undefined,
+      scheduledDate: wo.scheduledDate,
+      startedAtUtc: wo.startedAtUtc,
+      completedAtUtc: wo.completedAtUtc,
+    },
+  }
+}
+
+/** Requester notifications deep-link into the requester's own app. */
+function requestLink(d: DemoDb, req: MaintenanceRequest): string | undefined {
+  return d.users.find((u) => u.id === req.requestedById)?.role === 'Operator' ? `/operator/requests/${req.id}` : undefined
+}
 
 export const mockRequests: RequestService = {
   list: (filter = {}) =>
@@ -18,7 +41,7 @@ export const mockRequests: RequestService = {
         if (filter.status && r.status !== filter.status) return false
         if (filter.equipmentId && r.equipmentId !== filter.equipmentId) return false
         return true
-      })
+      }).map((r) => withProgress(d, r))
     }),
 
   get: (id) =>
@@ -28,7 +51,7 @@ export const mockRequests: RequestService = {
       if (!hasPermission(user.role, 'request.review') && req.requestedById !== user.id) {
         throw new ApiError('forbidden', 'You can only view your own requests.')
       }
-      return req
+      return withProgress(d, req)
     }),
 
   create: (input) =>
@@ -57,7 +80,7 @@ export const mockRequests: RequestService = {
         d.downtimes.push({ id: newId(), equipmentId: equipment.id, startUtc: now, reason: PROBLEM_CATEGORY_LABELS[input.category] })
       }
       if (d.settings.notifyOnNewRequest) {
-        notifyRole(d, 'Supervisor', 'New maintenance request', `${req.number} · ${equipment.name} · ${input.severity}`, '/supervisor/requests')
+        notifyRole(d, 'Supervisor', 'New maintenance request', `${req.number} · ${equipment.name} · ${input.severity}`, `/supervisor/requests?id=${req.id}`)
       }
       return req
     }),
@@ -104,7 +127,7 @@ export const mockRequests: RequestService = {
         addLog(d, wo, user.id, 'Assigned', `Assigned to ${userName(d, wo.assigneeId)}`)
         notifyAssignment(d, wo, wo.assigneeId)
       }
-      notifyUser(d, req.requestedById, 'Request approved', `${req.number} is now work order ${wo.number}`, '/operator/requests')
+      notifyUser(d, req.requestedById, 'Request approved', `${req.number} is now work order ${wo.number}`, requestLink(d, req))
       return { request: req, workOrder: wo }
     }),
 
@@ -123,7 +146,29 @@ export const mockRequests: RequestService = {
       const e = d.equipment.find((x) => x.id === req.equipmentId)
       const openCorrective = d.workOrders.some((w) => w.equipmentId === req.equipmentId && w.type === 'Corrective' && !['Completed', 'Cancelled'].includes(w.status))
       if (e && e.status === 'OutOfService' && !openCorrective) e.status = 'Operational'
-      notifyUser(d, req.requestedById, 'Request not approved', `${req.number}: ${req.reviewNote}`, '/operator/requests')
+      notifyUser(d, req.requestedById, 'Request not approved', `${req.number}: ${req.reviewNote}`, requestLink(d, req))
       return req
+    }),
+
+  activeIssues: (equipmentId) =>
+    read((d) => {
+      const user = authorize(d, 'request.create')
+      findOrThrow(d.equipment, equipmentId, 'Equipment')
+      const issues: ActiveIssue[] = [
+        ...d.requests
+          .filter((r) => r.equipmentId === equipmentId && r.status === 'Submitted')
+          .map((r) => ({ kind: 'request' as const, number: r.number, summary: PROBLEM_CATEGORY_LABELS[r.category], status: r.status, sinceUtc: r.createdAtUtc, reportedByMe: r.requestedById === user.id })),
+        ...d.workOrders
+          .filter((w) => w.equipmentId === equipmentId && w.type === 'Corrective' && isOpen(w))
+          .map((w) => ({
+            kind: 'workOrder' as const,
+            number: w.number,
+            summary: w.title,
+            status: w.status,
+            sinceUtc: w.createdAtUtc,
+            reportedByMe: !!w.requestId && d.requests.some((r) => r.id === w.requestId && r.requestedById === user.id),
+          })),
+      ]
+      return issues.sort((a, b) => b.sinceUtc.localeCompare(a.sinceUtc))
     }),
 }

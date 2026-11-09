@@ -15,6 +15,7 @@ import { errorMessage } from '@/services'
 import { FullPageSpinner } from './RequireRole'
 import { useAuth } from './context'
 import { DemoAccountPicker } from './DemoAccountPicker'
+import { readKioskDevice } from './kiosk'
 import { PinPad } from './PinPad'
 
 const ROLE_PREFIX: Record<Role, string> = { Admin: '/admin', Supervisor: '/supervisor', Technician: '/tech', Operator: '/operator' }
@@ -73,20 +74,23 @@ function PasswordForm({ onSignedIn }: { onSignedIn: (u: SessionUser) => void }) 
 type Mode = 'demo' | 'pin' | 'password'
 
 export function LoginPage() {
-  const { user, initializing, demo, signInAs, signInWithPin } = useAuth()
+  const { user, initializing, kiosk, demo, signInAs, signInWithPin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [params] = useSearchParams()
   const switching = params.get('switch') === '1'
-  const [mode, setMode] = useState<Mode>(demo ? 'demo' : 'password')
+  // Kiosks return to the PIN pad after each operator signs out.
+  const [mode, setMode] = useState<Mode>(() => (!demo ? 'password' : params.get('mode') === 'pin' || (!switching && readKioskDevice()) ? 'pin' : 'demo'))
   const [pinError, setPinError] = useState<string>()
   const [pinBusy, setPinBusy] = useState(false)
-  const from = (location.state as { from?: string } | null)?.from
+  const requested = (location.state as { from?: string } | null)?.from
+  // On a shared kiosk only a scanned label is resumed, never the previous operator's page.
+  const resume = (viaKiosk: boolean) => (viaKiosk && !requested?.startsWith('/equipment/') ? undefined : requested)
 
   if (initializing) return <FullPageSpinner />
-  if (user && !switching) return <Navigate to={destinationFor(user, from)} replace />
+  if (user && !switching) return <Navigate to={destinationFor(user, resume(kiosk))} replace />
 
-  const onSignedIn = (u: SessionUser) => navigate(destinationFor(u, from), { replace: true })
+  const onSignedIn = (u: SessionUser, viaKiosk = false) => navigate(destinationFor(u, resume(viaKiosk)), { replace: true })
 
   const modes: { id: Mode; label: string }[] = demo
     ? [
@@ -157,7 +161,7 @@ export function LoginPage() {
                     setPinBusy(true)
                     setPinError(undefined)
                     try {
-                      onSignedIn(await signInWithPin(pin))
+                      onSignedIn(await signInWithPin(pin), true)
                     } catch (e) {
                       setPinError(errorMessage(e))
                     } finally {

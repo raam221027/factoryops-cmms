@@ -13,6 +13,8 @@ import {
   Inbox,
   KanbanSquare,
   LayoutDashboard,
+  ListChecks,
+  Megaphone,
   QrCode,
   Settings,
   UserRound,
@@ -99,5 +101,9 @@ export const MOBILE_NAV: Partial<Record<Role, NavItem[]>> = {
     { label: 'History', to: '/tech/history', icon: History },
     { label: 'Profile', to: '/tech/profile', icon: UserRound },
   ],
-  Operator: [{ label: 'Home', to: '/operator', icon: Home, end: true }],
+  Operator: [
+    { label: 'Home', to: '/operator', icon: Home, end: true },
+    { label: 'Report', to: '/operator/report', icon: Megaphone },
+    { label: 'My reports', to: '/operator/requests', icon: ListChecks },
+  ],
 }

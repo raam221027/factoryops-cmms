@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { MapPin, Wrench } from 'lucide-react'
-import { useParams } from 'react-router'
+import { MapPin, Megaphone, Wrench } from 'lucide-react'
+import { Link, useParams } from 'react-router'
 import { EquipmentStatusBadge } from '@/components/shared/badges'
 import { ErrorState, ListSkeleton } from '@/components/shared/states'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { isOpen } from '@/domain/workOrderRules'
 import { useDowntimes, useLookups } from '@/features/shared/queries'
 import { useWorkOrders } from '@/features/work-orders/hooks'
@@ -89,6 +90,12 @@ export function TechEquipmentPage() {
             </ul>
           )}
         </section>
+
+        <Button variant="outline" size="lg" className="w-full" asChild>
+          <Link to={`/tech/report?equipment=${e.id}`}>
+            <Megaphone /> Report a new problem on this machine
+          </Link>
+        </Button>
 
         <Section title="Repair history" aside={<span className="text-xs text-muted-foreground">Last {history.data?.length ?? 0}</span>}>
           {history.isPending ? (

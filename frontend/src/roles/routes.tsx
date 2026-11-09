@@ -5,7 +5,7 @@ import { MobileShell } from '@/components/layout/MobileShell'
 import { DESKTOP_NAV, MOBILE_NAV } from '@/config/navigation'
 import { ROLES } from '@/domain/enums'
 import { RequireRole } from '@/features/auth/RequireRole'
-import { OperatorHome } from './operator/OperatorHome'
+import { OperatorLayout } from './operator/OperatorLayout'
 
 /*
  * One route tree per role experience, each behind its own guard and layout. Screens are
@@ -95,6 +95,7 @@ export const technicianRoutes: RouteObject = {
     { path: 'jobs', lazy: page(() => import('./technician/jobs/JobsPage'), (m) => m.JobsPage) },
     { path: 'jobs/:id', lazy: page(() => import('./technician/jobs/JobDetailPage'), (m) => m.JobDetailPage) },
     { path: 'scan', lazy: page(() => import('./technician/scan/ScanPage'), (m) => m.ScanPage) },
+    { path: 'report', lazy: page(() => import('./technician/report/ReportPage'), (m) => m.TechReportPage) },
     { path: 'equipment/:id', lazy: page(() => import('./technician/equipment/TechEquipmentPage'), (m) => m.TechEquipmentPage) },
     { path: 'history', lazy: page(() => import('./technician/history/HistoryPage'), (m) => m.HistoryPage) },
     { path: 'profile', lazy: page(() => import('./technician/profile/ProfilePage'), (m) => m.ProfilePage) },
@@ -105,8 +106,13 @@ export const operatorRoutes: RouteObject = {
   path: '/operator',
   element: (
     <RequireRole roles={['Operator']}>
-      <MobileShell items={MOBILE_NAV.Operator ?? []} />
+      <OperatorLayout />
     </RequireRole>
   ),
-  children: [{ index: true, element: <OperatorHome /> }],
+  children: [
+    { index: true, lazy: page(() => import('./operator/OperatorHome'), (m) => m.OperatorHome) },
+    { path: 'report', lazy: page(() => import('./operator/ReportPage'), (m) => m.ReportPage) },
+    { path: 'requests', lazy: page(() => import('./operator/requests/MyRequestsPage'), (m) => m.MyRequestsPage) },
+    { path: 'requests/:id', lazy: page(() => import('./operator/requests/RequestDetailPage'), (m) => m.RequestDetailPage) },
+  ],
 }

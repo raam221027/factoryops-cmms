@@ -4,6 +4,7 @@ import { hasPermission, type Permission } from '@/domain/permissions'
 import type { SessionUser } from '@/domain/types'
 import { ApiError, authService, isDemoAuth } from '@/services'
 import { AuthContext, type AuthContextValue } from './context'
+import { readKioskFlag, writeKioskDevice, writeKioskFlag } from './kiosk'
 
 const demo = isDemoAuth(authService) ? authService : null
 
@@ -16,6 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const [user, setUser] = useState<SessionUser | null>(null)
   const [initializing, setInitializing] = useState(true)
+  const [kiosk, setKiosk] = useState(readKioskFlag)
 
   useEffect(() => {
     let cancelled = false
@@ -31,8 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** A new identity must never see cached data from the previous one. */
   const startSession = useCallback(
-    (u: SessionUser) => {
+    (u: SessionUser, asKiosk = false) => {
       queryClient.clear()
+      writeKioskFlag(asKiosk)
+      writeKioskDevice(asKiosk)
+      setKiosk(asKiosk)
       setUser(u)
       return u
     },
@@ -42,6 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await authService.signOut()
     queryClient.clear()
+    writeKioskFlag(false)
+    setKiosk(false)
     setUser(null)
   }, [queryClient])
 
@@ -49,14 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       initializing,
+      kiosk,
       demo,
-      signIn: (email, password) => authService.signIn({ email, password }).then(startSession),
-      signInAs: (userId) => requireDemo().signInAs(userId).then(startSession),
-      signInWithPin: (pin) => requireDemo().signInWithPin(pin).then(startSession),
+      signIn: (email, password) => authService.signIn({ email, password }).then((u) => startSession(u)),
+      signInAs: (userId) => requireDemo().signInAs(userId).then((u) => startSession(u)),
+      signInWithPin: (pin) => requireDemo().signInWithPin(pin).then((u) => startSession(u, true)),
       signOut,
       can: (permission: Permission) => !!user && hasPermission(user.role, permission),
     }),
-    [user, initializing, startSession, signOut],
+    [user, initializing, kiosk, startSession, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

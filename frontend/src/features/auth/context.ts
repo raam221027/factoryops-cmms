@@ -7,6 +7,8 @@ export interface AuthContextValue {
   user: SessionUser | null
   /** True until the stored session has been checked on startup */
   initializing: boolean
+  /** Signed in with a PIN on a shared device: the session ends itself when left idle */
+  kiosk: boolean
   signIn(email: string, password: string): Promise<SessionUser>
   signOut(): Promise<void>
   can(permission: Permission): boolean

@@ -255,7 +255,10 @@ export const mockWorkOrders: WorkOrderService = {
       advancePmSchedule(d, wo)
       if (wo.requestId) {
         const req = d.requests.find((r) => r.id === wo.requestId)
-        if (req) notifyUser(d, req.requestedById, 'Repair completed', `${req.number}: ${wo.title}`, '/operator/requests')
+        if (req) {
+          const operator = d.users.find((u) => u.id === req.requestedById)?.role === 'Operator'
+          notifyUser(d, req.requestedById, 'Repair completed', `${req.number}: ${wo.title}`, operator ? `/operator/requests/${req.id}` : undefined)
+        }
       }
       notifyRole(d, 'Supervisor', 'Work order completed', `${wo.number} completed by ${user.name}`, `/supervisor/work-orders/${wo.id}`)
       return wo

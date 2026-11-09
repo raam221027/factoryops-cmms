@@ -15,6 +15,8 @@ const TARGET: Partial<Record<Role, (e: Equipment) => string>> = {
   Admin: (e) => `/admin/equipment/${e.id}`,
   Supervisor: (e) => `/supervisor/equipment/${e.id}`,
   Technician: (e) => `/tech/equipment/${e.id}`,
+  // Operators scan a label to report a problem on that machine.
+  Operator: (e) => `/operator/report?equipment=${e.id}`,
 }
 
 /**

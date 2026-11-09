@@ -16,6 +16,7 @@ import type {
   EquipmentDowntime,
   EquipmentLocation,
   Facility,
+  ActiveIssue,
   Id,
   InventoryTransaction,
   IsoDate,
@@ -194,6 +195,8 @@ export interface RequestService {
   create(input: RequestCreateInput): Promise<MaintenanceRequest>
   approve(id: Id, input: ApproveRequestInput): Promise<{ request: MaintenanceRequest; workOrder: WorkOrder }>
   reject(id: Id, note: string): Promise<MaintenanceRequest>
+  /** Problems already reported or being repaired on a machine (any reporter). */
+  activeIssues(equipmentId: Id): Promise<ActiveIssue[]>
 }
 
 export type PmScheduleInput = Omit<PmSchedule, 'id' | 'lastCompletedDate'>
