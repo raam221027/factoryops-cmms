@@ -32,7 +32,12 @@ cd frontend
 npm install
 npm run dev        # http://localhost:5173
 npm run typecheck && npm run lint && npm run build
+npm test           # unit tests (domain rules, permissions, service behaviour)
+npm run e2e        # browser suites in Chrome: workflows, PWA, responsive, accessibility, outages
 ```
+
+See [docs/frontend-handover.md](docs/frontend-handover.md) for the architecture, what the API
+must implement and enforce, deployment notes and known limitations.
 
 The frontend currently runs on in-browser demo data (`VITE_DATA_SOURCE=mock`, see
 `frontend/.env.example`). In development a demo sign-in lets you enter as any role

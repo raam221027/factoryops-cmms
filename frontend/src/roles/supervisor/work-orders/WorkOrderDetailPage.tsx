@@ -1,4 +1,5 @@
 import { CheckCircle2, ChevronDown, Circle, Pencil, UserPlus, XCircle } from 'lucide-react'
+import { PhotoThumb } from '@/components/shared/PhotoThumb'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { OverdueBadge, PriorityBadge, WorkOrderStatusBadge } from '@/components/shared/badges'
@@ -166,12 +167,7 @@ export function WorkOrderDetailPage() {
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {wo.attachments.map((a) => (
-                  <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="group block overflow-hidden rounded-md border">
-                    <img src={a.url} alt={`${a.kind} photo: ${a.fileName}`} className="aspect-square w-full object-cover transition-transform group-hover:scale-105" />
-                    <span className="block truncate px-2 py-1 text-xs text-muted-foreground">
-                      {a.kind} · {lookups.userName(a.uploadedById, '')}
-                    </span>
-                  </a>
+                  <PhotoThumb key={a.id} url={a.url} alt={`${a.kind} photo: ${a.fileName}`} caption={`${a.kind} · ${lookups.userName(a.uploadedById, '')}`} />
                 ))}
               </CardContent>
             </Card>

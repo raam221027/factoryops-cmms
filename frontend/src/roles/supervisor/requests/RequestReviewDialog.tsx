@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { PhotoThumb } from '@/components/shared/PhotoThumb'
 import { AlertTriangle, Check, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
@@ -92,9 +93,7 @@ function RequestFacts({ r, lookups }: { r: MaintenanceRequest; lookups: Lookups 
       {r.attachments.length > 0 && (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {r.attachments.map((a) => (
-            <a key={a.id} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border">
-              <img src={a.url} alt={`Photo: ${a.fileName}`} className="aspect-square w-full object-cover" />
-            </a>
+            <PhotoThumb key={a.id} url={a.url} alt={`Photo: ${a.fileName}`} />
           ))}
         </div>
       )}

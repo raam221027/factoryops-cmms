@@ -18,7 +18,7 @@ import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { EquipmentStatusBadge } from '@/components/shared/badges'
 import { SearchInput } from '@/components/shared/filters'
-import { ListSkeleton } from '@/components/shared/states'
+import { ErrorState, ListSkeleton } from '@/components/shared/states'
 import { Button } from '@/components/ui/button'
 import { Label, Textarea } from '@/components/ui/input'
 import { PROBLEM_CATEGORIES, PROBLEM_CATEGORY_LABELS, WORK_ORDER_STATUS_LABELS, type Priority, type ProblemCategory, type WorkOrderStatus } from '@/domain/enums'
@@ -29,6 +29,7 @@ import { EquipmentScanner } from '@/features/equipment/EquipmentScanner'
 import { useEquipmentList, useLookups } from '@/features/shared/queries'
 import { useRequests } from '@/features/work-orders/hooks'
 import { formatAgo } from '@/lib/format'
+import { safeAttachmentUrl } from '@/lib/url'
 import { cn, matchesQuery } from '@/lib/utils'
 import { errorMessage, services } from '@/services'
 
@@ -71,7 +72,7 @@ function MachineRow({ e, selected, onSelect, location }: { e: Equipment; selecte
 export function MachineStep({ equipmentId, onSelect, startScanning = false }: { equipmentId: string; onSelect: (id: string) => void; startScanning?: boolean }) {
   const user = useSessionUser()
   const equipment = useEquipmentList()
-  const { lookups, ready } = useLookups()
+  const { lookups, ready, error } = useLookups()
   const mine = useRequests({ mine: true })
   const [search, setSearch] = useState('')
   const [scanning, setScanning] = useState(startScanning)
@@ -91,6 +92,7 @@ export function MachineStep({ equipmentId, onSelect, startScanning = false }: { 
   const selected = lookups.equipment.get(equipmentId)
   const row = (e: Equipment) => <MachineRow key={e.id} e={e} selected={e.id === equipmentId} onSelect={() => onSelect(e.id)} location={lookups.locationLabel(e.id)} />
 
+  if (equipment.error || error) return <ErrorState error={equipment.error ?? error} onRetry={() => void equipment.refetch()} />
   if (!equipment.data || !ready) return <ListSkeleton rows={4} />
 
   if (selected && !scanning) {
@@ -322,7 +324,7 @@ export function DetailsStep({
         <ul className="grid grid-cols-3 gap-2">
           {photos.map((p, i) => (
             <li key={p.url.slice(-24) + i} className="relative">
-              <img src={p.url} alt={`Photo ${i + 1}`} className="aspect-square w-full rounded-md border object-cover" />
+              <img src={safeAttachmentUrl(p.url)} alt={`Photo ${i + 1}`} className="aspect-square w-full rounded-md border object-cover" />
               <button
                 type="button"
                 onClick={() => onPhotos(photos.filter((_, j) => j !== i))}

@@ -106,6 +106,14 @@ export function WeekPlanner({ workOrders, technicians, lookups }: { workOrders: 
   const rows: { id: string; user?: User }[] = [{ id: NONE }, ...technicians.map((t) => ({ id: t.id, user: t }))]
   const weekLabel = `${format(weekStart, 'MMM d')} – ${format(addDays(weekStart, 6), 'MMM d, yyyy')}`
   const open = (wo: WorkOrder) => navigate(`/supervisor/work-orders/${wo.id}`)
+  // Screen reader wording: work order numbers and "technician, day" instead of internal ids
+  const numberOf = (data: unknown) => workOrders.find((w) => w.id === workOrderIdOf(data))?.number ?? 'Work order'
+  const slotName = (id: string | number) => {
+    if (id === TRAY) return 'the to-plan list'
+    const { assigneeId, scheduledDate } = parseTarget(String(id))
+    const who = assigneeId ? (technicians.find((t) => t.id === assigneeId)?.name ?? 'a technician') : 'Unassigned'
+    return `${who}, ${format(new Date(`${scheduledDate}T00:00`), 'EEEE d MMMM')}`
+  }
 
   return (
     <DndContext
@@ -116,6 +124,12 @@ export function WeekPlanner({ workOrders, technicians, lookups }: { workOrders: 
       accessibility={{
         screenReaderInstructions: {
           draggable: 'To plan a work order, press space or enter to pick it up, use the arrow keys to move it onto a technician and day, then press space or enter to drop it.',
+        },
+        announcements: {
+          onDragStart: ({ active }) => `Picked up ${numberOf(active.data.current)}.`,
+          onDragOver: ({ active, over }) => (over ? `${numberOf(active.data.current)} is over ${slotName(over.id)}.` : `${numberOf(active.data.current)} is not over a day.`),
+          onDragEnd: ({ active, over }) => (over ? `${numberOf(active.data.current)} planned for ${slotName(over.id)}.` : `${numberOf(active.data.current)} dropped. No change.`),
+          onDragCancel: ({ active }) => `Planning ${numberOf(active.data.current)} cancelled.`,
         },
       }}
     >
@@ -140,13 +154,17 @@ export function WeekPlanner({ workOrders, technicians, lookups }: { workOrders: 
             </Button>
           </CardHeader>
           <div className="overflow-x-auto">
-            <div className="grid min-w-[980px] grid-cols-[170px_repeat(7,minmax(110px,1fr))]" role="grid" aria-label={`Technician schedule, ${weekLabel}`}>
-              <div className="sticky left-0 z-10 border-b bg-surface" role="columnheader" />
-              {days.map((d) => (
-                <div key={d} role="columnheader" className={cn('border-b border-l px-2 py-2 text-xs font-medium', d === today ? 'bg-primary-soft text-primary' : 'text-muted-foreground')}>
-                  {format(new Date(`${d}T00:00`), 'EEE d')}
+            <div className="grid min-w-[980px] grid-cols-[170px_repeat(7,minmax(110px,1fr))]" role="table" aria-label={`Technician schedule, ${weekLabel}`}>
+              <div role="row" className="contents">
+                <div className="sticky left-0 z-10 border-b bg-surface" role="columnheader">
+                  <span className="sr-only">Technician</span>
                 </div>
-              ))}
+                {days.map((d) => (
+                  <div key={d} role="columnheader" className={cn('border-b border-l px-2 py-2 text-xs font-medium', d === today ? 'bg-primary-soft text-primary' : 'text-muted-foreground')}>
+                    {format(new Date(`${d}T00:00`), 'EEE d')}
+                  </div>
+                ))}
+              </div>
               {rows.map((row) => {
                 const weekCount = days.reduce((s, d) => s + (byCell.get(cellId(row.id, d))?.length ?? 0), 0)
                 return (
@@ -226,7 +244,7 @@ function Cell({ id, past, items, label, unassignedRow, children }: { id: string;
   return (
     <div
       ref={setNodeRef}
-      role="gridcell"
+      role="cell"
       aria-label={`${label}: ${items.length} jobs`}
       className={cn('min-h-20 space-y-1 border-b border-l p-1', past && 'bg-muted/40', over && 'bg-warning-soft/50', isOver && 'bg-primary-soft ring-2 ring-inset ring-primary/40')}
     >

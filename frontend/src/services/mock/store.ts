@@ -42,6 +42,8 @@ export function resetDemoData() {
 
 /** Simulated network latency so loading states behave as they will against the API. */
 export function latency(ms = 120 + Math.random() * 180): Promise<void> {
+  // Unit tests run the demo services without the artificial delay.
+  if (import.meta.env.MODE === 'test') return Promise.resolve()
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 

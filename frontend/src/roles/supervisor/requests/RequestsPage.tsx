@@ -6,7 +6,7 @@ import { FilterBar, FilterSelect, SearchInput } from '@/components/shared/filter
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PRIORITIES, PROBLEM_CATEGORY_LABELS, REQUEST_STATUSES, type Priority, type RequestStatus } from '@/domain/enums'
 import type { MaintenanceRequest } from '@/domain/types'
 import { useLookups } from '@/features/shared/queries'
@@ -108,25 +108,31 @@ export function RequestsPage() {
               </TabsTrigger>
             ))}
           </TabsList>
+          {/* Every tab has a panel; only the active one holds the list */}
+          {REQUEST_STATUSES.filter((t) => t !== tab).map((t) => (
+            <TabsContent key={t} value={t} />
+          ))}
+          <TabsContent value={tab} className="pt-0">
+            <FilterBar>
+              <SearchInput value={search} onChange={(v) => setParam('q', v)} placeholder="Search request, equipment, operator…" className="sm:w-72" />
+              <FilterSelect label="Severity" value={severity} onChange={(v) => setParam('severity', v)} options={PRIORITIES.map((p) => ({ value: p, label: p }))} />
+            </FilterBar>
+            <DataTable
+              key={tab}
+              data={ready ? rows : undefined}
+              columns={columns}
+              getRowId={(r) => r.id}
+              loading={requests.isPending}
+              error={requests.error ?? error}
+              onRetry={() => void requests.refetch()}
+              onRowClick={(r) => setParam('id', r.id)}
+              rowClassName={(r) => cn(r.status === 'Submitted' && r.severity === 'Critical' && 'bg-danger-soft/30')}
+              emptyTitle={tab === 'Submitted' ? 'No requests waiting' : 'Nothing here yet'}
+              emptyDescription={tab === 'Submitted' ? 'New reports from operators appear here.' : undefined}
+              pageSize={20}
+            />
+          </TabsContent>
         </Tabs>
-        <FilterBar>
-          <SearchInput value={search} onChange={(v) => setParam('q', v)} placeholder="Search request, equipment, operator…" className="sm:w-72" />
-          <FilterSelect label="Severity" value={severity} onChange={(v) => setParam('severity', v)} options={PRIORITIES.map((p) => ({ value: p, label: p }))} />
-        </FilterBar>
-        <DataTable
-          key={tab}
-          data={ready ? rows : undefined}
-          columns={columns}
-          getRowId={(r) => r.id}
-          loading={requests.isPending}
-          error={requests.error ?? error}
-          onRetry={() => void requests.refetch()}
-          onRowClick={(r) => setParam('id', r.id)}
-          rowClassName={(r) => cn(r.status === 'Submitted' && r.severity === 'Critical' && 'bg-danger-soft/30')}
-          emptyTitle={tab === 'Submitted' ? 'No requests waiting' : 'Nothing here yet'}
-          emptyDescription={tab === 'Submitted' ? 'New reports from operators appear here.' : undefined}
-          pageSize={20}
-        />
       </Card>
       <RequestReviewDialog requestId={openId} onOpenChange={(o) => !o && setParam('id', null)} />
     </>

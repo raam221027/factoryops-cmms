@@ -27,7 +27,7 @@
   --accent: #eef2f7;
   --accent-foreground: #0f172a;
 
-  --success: #15803d;
+  --success: #137333;
   --success-soft: #e7f5ec;
   --warning: #b45309;
   --warning-soft: #fdf3e2;
@@ -35,7 +35,7 @@
   --danger-soft: #fcebeb;
   --info: #1d6fb8;
   --info-soft: #e5f0fa;
-  --neutral: #64748b;
+  --neutral: #526075;
   --neutral-soft: #eef1f5;
 
   --sidebar: #12263f;
@@ -53,7 +53,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -145,4 +145,20 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Toasts use the app's semantic colours, which meet WCAG AA contrast (sonner's defaults do not) */
+:root [data-sonner-toaster][data-theme='light'] {
+  --success-bg: var(--color-success-soft);
+  --success-border: color-mix(in srgb, var(--color-success) 30%, transparent);
+  --success-text: var(--color-success);
+  --info-bg: var(--color-info-soft);
+  --info-border: color-mix(in srgb, var(--color-info) 30%, transparent);
+  --info-text: var(--color-info);
+  --warning-bg: var(--color-warning-soft);
+  --warning-border: color-mix(in srgb, var(--color-warning) 30%, transparent);
+  --warning-text: var(--color-warning);
+  --error-bg: var(--color-danger-soft);
+  --error-border: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  --error-text: var(--color-danger);
 }

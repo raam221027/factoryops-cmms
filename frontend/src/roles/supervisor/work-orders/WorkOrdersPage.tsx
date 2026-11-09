@@ -7,7 +7,7 @@ import { FilterBar, FilterSelect, SearchInput } from '@/components/shared/filter
 import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PRIORITIES, WORK_ORDER_STATUS_LABELS, WORK_ORDER_STATUSES, WORK_ORDER_TYPES, type Priority, type WorkOrderStatus, type WorkOrderType } from '@/domain/enums'
 import type { WorkOrder } from '@/domain/types'
 import { compareByUrgency, isOpen, isOverdue, toIsoDate } from '@/domain/workOrderRules'
@@ -163,38 +163,44 @@ export function WorkOrdersPage() {
               </TabsTrigger>
             ))}
           </TabsList>
+          {/* Every tab has a panel; only the active one holds the list */}
+          {VIEWS.map((v) => v.value).filter((t) => t !== view).map((t) => (
+            <TabsContent key={t} value={t} />
+          ))}
+          <TabsContent value={view} className="pt-0">
+            <FilterBar
+              actions={
+                <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
+                  <Download /> Export
+                </Button>
+              }
+            >
+              <SearchInput value={search} onChange={(v) => setParam('q', v)} placeholder="Search number, title, equipment…" className="sm:w-72" />
+              <FilterSelect label="Status" value={status} onChange={(v) => setParam('status', v)} options={WORK_ORDER_STATUSES.map((s) => ({ value: s, label: WORK_ORDER_STATUS_LABELS[s] }))} />
+              <FilterSelect label="Type" value={type} onChange={(v) => setParam('type', v)} options={WORK_ORDER_TYPES.map((t) => ({ value: t, label: t }))} className="sm:w-36" />
+              <FilterSelect label="Priority" value={priority} onChange={(v) => setParam('priority', v)} options={PRIORITIES.map((p) => ({ value: p, label: p }))} className="sm:w-36" />
+              <FilterSelect
+                label="Technician"
+                value={assignee}
+                onChange={(v) => setParam('assignee', v)}
+                options={[{ value: 'none', label: 'Unassigned' }, ...technicians.map((t) => ({ value: t.id, label: t.name }))]}
+              />
+            </FilterBar>
+            <DataTable
+              data={ready ? rows : undefined}
+              columns={columns}
+              getRowId={(w) => w.id}
+              loading={workOrders.isPending}
+              error={workOrders.error ?? error}
+              onRetry={() => void workOrders.refetch()}
+              onRowClick={(w) => navigate(`/supervisor/work-orders/${w.id}`)}
+              rowClassName={(w) => cn(isOverdue(w) && 'bg-danger-soft/30')}
+              emptyTitle="No work orders match"
+              emptyDescription="Try another view or clear the filters."
+              pageSize={20}
+            />
+          </TabsContent>
         </Tabs>
-        <FilterBar
-          actions={
-            <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
-              <Download /> Export
-            </Button>
-          }
-        >
-          <SearchInput value={search} onChange={(v) => setParam('q', v)} placeholder="Search number, title, equipment…" className="sm:w-72" />
-          <FilterSelect label="Status" value={status} onChange={(v) => setParam('status', v)} options={WORK_ORDER_STATUSES.map((s) => ({ value: s, label: WORK_ORDER_STATUS_LABELS[s] }))} />
-          <FilterSelect label="Type" value={type} onChange={(v) => setParam('type', v)} options={WORK_ORDER_TYPES.map((t) => ({ value: t, label: t }))} className="sm:w-36" />
-          <FilterSelect label="Priority" value={priority} onChange={(v) => setParam('priority', v)} options={PRIORITIES.map((p) => ({ value: p, label: p }))} className="sm:w-36" />
-          <FilterSelect
-            label="Technician"
-            value={assignee}
-            onChange={(v) => setParam('assignee', v)}
-            options={[{ value: 'none', label: 'Unassigned' }, ...technicians.map((t) => ({ value: t.id, label: t.name }))]}
-          />
-        </FilterBar>
-        <DataTable
-          data={ready ? rows : undefined}
-          columns={columns}
-          getRowId={(w) => w.id}
-          loading={workOrders.isPending}
-          error={workOrders.error ?? error}
-          onRetry={() => void workOrders.refetch()}
-          onRowClick={(w) => navigate(`/supervisor/work-orders/${w.id}`)}
-          rowClassName={(w) => cn(isOverdue(w) && 'bg-danger-soft/30')}
-          emptyTitle="No work orders match"
-          emptyDescription="Try another view or clear the filters."
-          pageSize={20}
-        />
       </Card>
       <WorkOrderFormDialog open={creating} onOpenChange={setCreating} onCreated={(wo) => navigate(`/supervisor/work-orders/${wo.id}`)} />
     </>

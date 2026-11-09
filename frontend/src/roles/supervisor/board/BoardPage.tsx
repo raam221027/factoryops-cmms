@@ -13,7 +13,7 @@ import {
 } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { subDays } from 'date-fns'
-import { ExternalLink, MoreHorizontal, Plus, UserPlus, XCircle } from 'lucide-react'
+import { ExternalLink, GripVertical, MoreHorizontal, Plus, UserPlus, XCircle } from 'lucide-react'
 import { useMemo, useState, type ReactNode, type SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -115,6 +115,10 @@ export function BoardPage() {
     changeStatus.mutate({ id: wo.id, to }, { onError: () => queryClient.setQueryData(key, snapshot) })
   }
 
+  // Screen reader wording: work order numbers and column names instead of internal ids
+  const numberOf = (id: string | number) => (workOrders.data ?? []).find((w) => w.id === id)?.number ?? 'Work order'
+  const columnName = (id: string | number) => WORK_ORDER_STATUS_LABELS[id as WorkOrderStatus] ?? String(id)
+
   function onDragStart(e: DragStartEvent) {
     setDragging((workOrders.data ?? []).find((w) => w.id === e.active.id) ?? null)
   }
@@ -164,6 +168,12 @@ export function BoardPage() {
           accessibility={{
             screenReaderInstructions: {
               draggable: 'To pick up a work order, press space or enter. Use the arrow keys to move it to another column. Press space or enter again to drop it, or escape to cancel.',
+            },
+            announcements: {
+              onDragStart: ({ active }) => `Picked up ${numberOf(active.id)}.`,
+              onDragOver: ({ active, over }) => (over ? `${numberOf(active.id)} is over ${columnName(over.id)}.` : `${numberOf(active.id)} is not over a column.`),
+              onDragEnd: ({ active, over }) => (over ? `${numberOf(active.id)} dropped on ${columnName(over.id)}.` : `${numberOf(active.id)} dropped. No change.`),
+              onDragCancel: ({ active }) => `Moving ${numberOf(active.id)} cancelled.`,
             },
           }}
         >
@@ -248,21 +258,16 @@ function DraggableCard({
   onCancel: () => void
   onMove: (to: WorkOrderStatus) => void
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: wo.id })
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({ id: wo.id })
   const targets = PLANNING_STATUSES.filter((s) => s !== wo.status && canTransition(wo.status, s))
   const canAssign = wo.status !== 'InProgress' && wo.status !== 'Completed'
   const canCancel = canTransition(wo.status, 'Cancelled')
   const stop = { onPointerDown: (e: SyntheticEvent) => e.stopPropagation(), onKeyDown: (e: SyntheticEvent) => e.stopPropagation() }
 
+  // The whole card drags with mouse or touch and opens on click. Keyboard and screen-reader
+  // users drag with the handle and open the card from its menu, so no control is nested in another.
   return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      aria-label={`${wo.number}: ${wo.title}`}
-      onClick={onOpen}
-      className={cn('cursor-grab rounded-lg focus-visible:outline-2 focus-visible:outline-ring active:cursor-grabbing', isDragging && 'opacity-40')}
-    >
+    <div ref={setNodeRef} {...listeners} onClick={onOpen} className={cn('cursor-grab rounded-lg active:cursor-grabbing', isDragging && 'opacity-40')}>
       <WorkOrderCard
         wo={wo}
         lookups={lookups}
@@ -270,42 +275,54 @@ function DraggableCard({
         footer={
           <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2">
             <AssigneeLine wo={wo} lookups={lookups} />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-sm" className="-my-1 -mr-1" aria-label={`Actions for ${wo.number}`} onClick={(e) => e.stopPropagation()} {...stop}>
-                  <MoreHorizontal />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem onSelect={onOpen}>
-                  <ExternalLink /> Open
-                </DropdownMenuItem>
-                {canAssign && (
-                  <DropdownMenuItem onSelect={onAssign}>
-                    <UserPlus /> {wo.assigneeId ? 'Reassign / reschedule…' : 'Assign…'}
+            <span className="-my-1 -mr-1 flex shrink-0 items-center">
+              <button
+                ref={setActivatorNodeRef}
+                type="button"
+                {...attributes}
+                aria-label={`Move ${wo.number}: ${wo.title}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex size-8 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <GripVertical className="size-4" aria-hidden />
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${wo.number}`} onClick={(e) => e.stopPropagation()} {...stop}>
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onSelect={onOpen}>
+                    <ExternalLink /> Open
                   </DropdownMenuItem>
-                )}
-                {targets.length > 0 && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Move to</DropdownMenuLabel>
-                    {targets.map((t) => (
-                      <DropdownMenuItem key={t} onSelect={() => onMove(t)}>
-                        {WORK_ORDER_STATUS_LABELS[t]}
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
-                {canCancel && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem destructive onSelect={onCancel}>
-                      <XCircle /> Cancel…
+                  {canAssign && (
+                    <DropdownMenuItem onSelect={onAssign}>
+                      <UserPlus /> {wo.assigneeId ? 'Reassign / reschedule…' : 'Assign…'}
                     </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  )}
+                  {targets.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Move to</DropdownMenuLabel>
+                      {targets.map((t) => (
+                        <DropdownMenuItem key={t} onSelect={() => onMove(t)}>
+                          {WORK_ORDER_STATUS_LABELS[t]}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  {canCancel && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem destructive onSelect={onCancel}>
+                        <XCircle /> Cancel…
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </span>
           </div>
         }
       />

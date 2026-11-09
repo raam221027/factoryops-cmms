@@ -25,11 +25,14 @@ export function PinPad({ length = 4, onSubmit, error, busy }: { length?: number;
 
   return (
     <div className="mx-auto w-full max-w-xs">
-      <div className="mb-2 flex justify-center gap-3" aria-live="polite" aria-label={`${pin.length} of ${length} digits entered`}>
+      <div className="mb-2 flex justify-center gap-3" aria-hidden>
         {Array.from({ length }, (_, i) => (
           <span key={i} className={cn('size-3.5 rounded-full border-2 border-primary', i < pin.length && 'bg-primary')} />
         ))}
       </div>
+      <p className="sr-only" aria-live="polite">
+        {pin.length} of {length} digits entered
+      </p>
       <p className={cn('mb-3 h-5 text-center text-sm', error ? 'text-danger' : 'text-muted-foreground')} role={error ? 'alert' : undefined}>
         {error ?? (busy ? 'Checking…' : '')}
       </p>

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { PhotoThumb } from '@/components/shared/PhotoThumb'
 import { Camera, Check, Package, Plus, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
@@ -127,10 +128,8 @@ export function PhotosSection({ wo }: { wo: WorkOrder }) {
         <ul className="mb-3 grid grid-cols-3 gap-2">
           {wo.attachments.map((a) => (
             <li key={a.id} className="relative">
-              <a href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border">
-                <img src={a.url} alt={`${a.kind} photo`} className="aspect-square w-full object-cover" />
-              </a>
-              <span className="absolute bottom-1 left-1 rounded-sm bg-foreground/70 px-1 text-[10px] font-medium text-white">{a.kind}</span>
+              <PhotoThumb url={a.url} alt={`${a.kind} photo`} />
+              <span className="pointer-events-none absolute bottom-1 left-1 rounded-sm bg-foreground/70 px-1 text-[10px] font-medium text-white">{a.kind}</span>
               {isOpen(wo) && a.uploadedById === user.id && (
                 <button
                   type="button"

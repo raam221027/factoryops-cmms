@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -88,9 +88,13 @@ export function EquipmentFormPage() {
   const { id } = useParams()
   const editing = !!id
   const existing = useQuery({ queryKey: ['equipment', 'detail', id], queryFn: () => services.equipment.get(id!), enabled: editing })
+  // The form's dropdowns need the category, department and area lists
+  const { error: lookupError } = useLookups()
+  const queryClient = useQueryClient()
 
   if (editing && existing.isPending) return <ListSkeleton rows={6} />
   if (editing && existing.error) return <ErrorState error={existing.error} onRetry={() => void existing.refetch()} />
+  if (lookupError) return <ErrorState error={lookupError} onRetry={() => void queryClient.refetchQueries({ type: 'active' })} />
   return <EquipmentForm key={id ?? 'new'} existing={existing.data} />
 }
 

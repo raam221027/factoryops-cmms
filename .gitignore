@@ -20,3 +20,8 @@ build/
 .idea/
 Thumbs.db
 .DS_Store
+
+# Frontend end-to-end test builds and screenshots
+dist-e2e/
+dist-e2e-api/
+frontend/e2e/screenshots/

@@ -49,7 +49,7 @@ export function ErrorState({ error, onRetry, className }: { error: unknown; onRe
 
 export function ListSkeleton({ rows = 5, className }: { rows?: number; className?: string }) {
   return (
-    <div className={cn('space-y-2', className)} aria-busy="true" aria-label="Loading">
+    <div className={cn('space-y-2', className)} role="status" aria-busy="true" aria-label="Loading">
       {Array.from({ length: rows }, (_, i) => (
         <Skeleton key={i} className="h-14 w-full" />
       ))}
@@ -59,7 +59,7 @@ export function ListSkeleton({ rows = 5, className }: { rows?: number; className
 
 export function KpiSkeletonRow({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-busy="true" aria-label="Loading">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" role="status" aria-busy="true" aria-label="Loading">
       {Array.from({ length: count }, (_, i) => (
         <Skeleton key={i} className="h-[88px]" />
       ))}

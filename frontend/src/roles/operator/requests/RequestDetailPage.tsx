@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { PhotoThumb } from '@/components/shared/PhotoThumb'
 import { format, parseISO } from 'date-fns'
 import { Check, ChevronLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -64,7 +65,7 @@ export function RequestDetailPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const request = useQuery({ queryKey: ['requests', 'detail', id], queryFn: () => services.requests.get(id) })
-  const { lookups, ready } = useLookups()
+  const { lookups, ready, error: lookupError } = useLookups()
   const back = () => (location.key !== 'default' ? navigate(-1) : navigate('/operator/requests'))
 
   const header = (title: string, sub?: ReactNode) => (
@@ -79,14 +80,14 @@ export function RequestDetailPage() {
     </div>
   )
 
-  if (request.isPending || !ready) return <ListSkeleton rows={4} />
-  if (request.error)
+  if (request.error || lookupError)
     return (
       <>
         {header('Report')}
-        <ErrorState error={request.error} onRetry={() => void request.refetch()} />
+        <ErrorState error={request.error ?? lookupError} onRetry={() => void request.refetch()} />
       </>
     )
+  if (request.isPending || !ready) return <ListSkeleton rows={4} />
   const r = request.data
   const stage = requestStage(r)
   const e = lookups.equipment.get(r.equipmentId)
@@ -135,9 +136,7 @@ export function RequestDetailPage() {
             <ul className="mt-3 grid grid-cols-3 gap-2">
               {r.attachments.map((a) => (
                 <li key={a.id}>
-                  <a href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border">
-                    <img src={a.url} alt={`Photo ${a.fileName}`} className="aspect-square w-full object-cover" />
-                  </a>
+                  <PhotoThumb url={a.url} alt={`Photo ${a.fileName}`} />
                 </li>
               ))}
             </ul>

@@ -32,6 +32,8 @@ export const tooltipProps = {
     boxShadow: '0 8px 24px -6px rgb(15 23 42 / 0.18)',
   },
   labelStyle: { color: 'var(--foreground)', fontWeight: 600, marginBottom: 2 },
+  // Series colours can be too pale for text; keep values readable (the legend shows the colour)
+  itemStyle: { color: 'var(--foreground)' },
   cursor: { fill: 'var(--muted)', opacity: 0.6 },
 } as const
 
