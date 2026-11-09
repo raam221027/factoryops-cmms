@@ -70,6 +70,11 @@ export interface EquipmentService {
   update(id: Id, input: EquipmentInput): Promise<Equipment>
   /** Next free asset ID for a category, e.g. "CNC-009". */
   nextAssetId(categoryId: Id): Promise<string>
+  /**
+   * Completed work on a machine, newest first. Available to anyone who can view equipment, so
+   * technicians see past repairs by colleagues even though they only see their own open work.
+   */
+  history(equipmentId: Id, limit?: number): Promise<WorkOrder[]>
 }
 
 export interface UserFilter {

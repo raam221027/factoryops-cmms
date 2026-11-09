@@ -7,13 +7,17 @@ import {
   ClipboardList,
   Cog,
   Gauge,
+  History,
   HardHat,
   Home,
   Inbox,
   KanbanSquare,
   LayoutDashboard,
+  QrCode,
   Settings,
+  UserRound,
   Users,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import type { Role } from '@/domain/enums'
@@ -88,6 +92,12 @@ export const DESKTOP_NAV: Partial<Record<Role, NavSection[]>> = {
 }
 
 export const MOBILE_NAV: Partial<Record<Role, NavItem[]>> = {
-  Technician: [{ label: 'Home', to: '/tech', icon: Home, end: true }],
+  Technician: [
+    { label: 'Home', to: '/tech', icon: Home, end: true },
+    { label: 'Jobs', to: '/tech/jobs', icon: Wrench },
+    { label: 'Scan', to: '/tech/scan', icon: QrCode },
+    { label: 'History', to: '/tech/history', icon: History },
+    { label: 'Profile', to: '/tech/profile', icon: UserRound },
+  ],
   Operator: [{ label: 'Home', to: '/operator', icon: Home, end: true }],
 }

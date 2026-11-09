@@ -108,6 +108,15 @@ export const mockEquipment: EquipmentService = {
       return d.equipment.find((e) => e.assetId.toLowerCase() === needle) ?? null
     }),
   nextAssetId: (categoryId) => read((d) => (actor(d), nextAssetId(d, categoryId))),
+  history: (equipmentId, limit = 20) =>
+    read((d) => {
+      authorize(d, 'equipment.view')
+      findOrThrow(d.equipment, equipmentId, 'Equipment')
+      return d.workOrders
+        .filter((wo) => wo.equipmentId === equipmentId && wo.status === 'Completed')
+        .sort((a, b) => (b.completedAtUtc ?? '').localeCompare(a.completedAtUtc ?? ''))
+        .slice(0, limit)
+    }),
   create: (input) =>
     write((d) => {
       authorize(d, 'equipment.manage')

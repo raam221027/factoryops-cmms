@@ -33,6 +33,11 @@ export function isDueOn(wo: Pick<WorkOrder, 'status' | 'dueDate'>, day: Date): b
   return isOpen(wo) && wo.dueDate === toIsoDate(day)
 }
 
+/** Belongs on a technician's list for the day: planned for it (or earlier), due by it, or overdue. */
+export function isOnTodaysList(wo: Pick<WorkOrder, 'status' | 'dueDate' | 'scheduledDate'>, today: Date = new Date()): boolean {
+  return isOpen(wo) && ((wo.scheduledDate ?? wo.dueDate ?? '9999') <= toIsoDate(today) || isOverdue(wo, today))
+}
+
 export function dueDateForPriority(priority: Priority, slaHours: Record<Priority, number>, from: Date = new Date()): IsoDate {
   return toIsoDate(addHours(from, slaHours[priority]))
 }

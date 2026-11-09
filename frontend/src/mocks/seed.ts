@@ -513,7 +513,8 @@ export function createSeed(now: Date = new Date()): DemoDb {
           scheduledDate: s.nextDueDate,
           checklist: checklistFrom(s.checklist, false),
         },
-        { status: 'Assigned', created: subDays(parseISO(s.nextDueDate), 5), assigneeId: s.assigneeId },
+        // Generated up to 5 days ahead of the due date, but never in the future
+        { status: 'Assigned', created: new Date(Math.min(subDays(parseISO(s.nextDueDate), 5).getTime(), addHours(now, -3).getTime())), assigneeId: s.assigneeId },
       )
     }
   }

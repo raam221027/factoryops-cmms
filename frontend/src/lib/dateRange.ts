@@ -17,3 +17,18 @@ export function lastDays(days: number, now = new Date()): DateRange {
 export function equipmentQrUrl(assetId: string): string {
   return `${window.location.origin}/equipment/${encodeURIComponent(assetId)}`
 }
+
+/**
+ * Asset ID from scanned QR content. Labels encode `<origin>/equipment/<assetId>`; plain asset
+ * IDs (older labels, barcodes) are accepted as they are. Returns null for anything else.
+ */
+export function assetIdFromScan(text: string): string | null {
+  const value = text.trim()
+  try {
+    const url = new URL(value)
+    const match = url.pathname.match(/\/equipment\/([^/]+)\/?$/)
+    return match ? decodeURIComponent(match[1]) : null
+  } catch {
+    return /^[A-Za-z0-9][A-Za-z0-9._-]{1,39}$/.test(value) ? value : null
+  }
+}

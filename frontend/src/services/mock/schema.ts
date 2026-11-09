@@ -18,7 +18,7 @@ import type {
 } from '@/domain/types'
 
 /** Shape of the in-browser demo database. Bump DEMO_DB_VERSION when it changes. */
-export const DEMO_DB_VERSION = 3
+export const DEMO_DB_VERSION = 4
 
 export interface DemoDb {
   version: number

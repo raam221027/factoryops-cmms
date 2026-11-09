@@ -14,6 +14,7 @@ import { services } from '@/services'
 const TARGET: Partial<Record<Role, (e: Equipment) => string>> = {
   Admin: (e) => `/admin/equipment/${e.id}`,
   Supervisor: (e) => `/supervisor/equipment/${e.id}`,
+  Technician: (e) => `/tech/equipment/${e.id}`,
 }
 
 /**

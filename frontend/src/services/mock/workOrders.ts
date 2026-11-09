@@ -249,7 +249,8 @@ export const mockWorkOrders: WorkOrderService = {
       wo.rootCause = input.rootCause?.trim() || undefined
       wo.actionsTaken = input.actionsTaken.trim()
       if (input.note?.trim()) addLog(d, wo, user.id, 'Note', input.note.trim())
-      addLog(d, wo, user.id, 'Completed', `Completed · ${input.laborHours} h labor`)
+      const openItems = wo.checklist.filter((c) => !c.done).length
+      addLog(d, wo, user.id, 'Completed', `Completed · ${input.laborHours} h labor${openItems ? ` · ${openItems} checklist item${openItems > 1 ? 's' : ''} not ticked` : ''}`)
       releaseEquipmentIfClear(d, wo.equipmentId, wo.id)
       advancePmSchedule(d, wo)
       if (wo.requestId) {

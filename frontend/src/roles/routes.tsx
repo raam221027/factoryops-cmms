@@ -6,7 +6,6 @@ import { DESKTOP_NAV, MOBILE_NAV } from '@/config/navigation'
 import { ROLES } from '@/domain/enums'
 import { RequireRole } from '@/features/auth/RequireRole'
 import { OperatorHome } from './operator/OperatorHome'
-import { TechnicianHome } from './technician/TechnicianHome'
 
 /*
  * One route tree per role experience, each behind its own guard and layout. Screens are
@@ -88,10 +87,18 @@ export const technicianRoutes: RouteObject = {
   path: '/tech',
   element: (
     <RequireRole roles={['Technician']}>
-      <MobileShell items={MOBILE_NAV.Technician ?? []} />
+      <MobileShell items={MOBILE_NAV.Technician ?? []} profilePath="/tech/profile" highlight="/tech/scan" />
     </RequireRole>
   ),
-  children: [{ index: true, element: <TechnicianHome /> }],
+  children: [
+    { index: true, lazy: page(() => import('./technician/home/TechnicianHome'), (m) => m.TechnicianHome) },
+    { path: 'jobs', lazy: page(() => import('./technician/jobs/JobsPage'), (m) => m.JobsPage) },
+    { path: 'jobs/:id', lazy: page(() => import('./technician/jobs/JobDetailPage'), (m) => m.JobDetailPage) },
+    { path: 'scan', lazy: page(() => import('./technician/scan/ScanPage'), (m) => m.ScanPage) },
+    { path: 'equipment/:id', lazy: page(() => import('./technician/equipment/TechEquipmentPage'), (m) => m.TechEquipmentPage) },
+    { path: 'history', lazy: page(() => import('./technician/history/HistoryPage'), (m) => m.HistoryPage) },
+    { path: 'profile', lazy: page(() => import('./technician/profile/ProfilePage'), (m) => m.ProfilePage) },
+  ],
 }
 
 export const operatorRoutes: RouteObject = {
