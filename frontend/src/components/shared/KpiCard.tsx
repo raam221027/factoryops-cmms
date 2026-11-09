@@ -42,7 +42,7 @@ export function KpiCard({
       {hint && <p className="mt-0.5 truncate text-xs text-muted-foreground">{hint}</p>}
     </>
   )
-  const className = 'block rounded-lg border bg-surface p-4 shadow-card'
+  const className = 'block min-w-0 rounded-lg border bg-surface p-4 shadow-card'
   return to ? (
     <Link to={to} className={cn(className, 'transition-colors hover:border-primary/40')}>
       {body}

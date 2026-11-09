@@ -1,4 +1,21 @@
-import { BarChart3, Boxes, Building2, CalendarClock, Cog, Home, LayoutDashboard, Settings, Users, type LucideIcon } from 'lucide-react'
+import {
+  BarChart3,
+  Boxes,
+  Building2,
+  CalendarClock,
+  CalendarRange,
+  ClipboardList,
+  Cog,
+  Gauge,
+  HardHat,
+  Home,
+  Inbox,
+  KanbanSquare,
+  LayoutDashboard,
+  Settings,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import type { Role } from '@/domain/enums'
 
 export interface NavItem {
@@ -44,7 +61,30 @@ export const DESKTOP_NAV: Partial<Record<Role, NavSection[]>> = {
       ],
     },
   ],
-  Supervisor: [{ items: [{ label: 'Dashboard', to: '/supervisor', icon: LayoutDashboard, end: true }] }],
+  Supervisor: [
+    {
+      title: 'Overview',
+      items: [
+        { label: 'Dashboard', to: '/supervisor', icon: LayoutDashboard, end: true },
+        { label: 'Requests', to: '/supervisor/requests', icon: Inbox },
+      ],
+    },
+    {
+      title: 'Work',
+      items: [
+        { label: 'Work orders', to: '/supervisor/work-orders', icon: ClipboardList },
+        { label: 'Board', to: '/supervisor/board', icon: KanbanSquare },
+        { label: 'Schedule', to: '/supervisor/schedule', icon: CalendarRange },
+      ],
+    },
+    {
+      title: 'Team & assets',
+      items: [
+        { label: 'Technicians', to: '/supervisor/technicians', icon: HardHat },
+        { label: 'Equipment', to: '/supervisor/equipment', icon: Gauge },
+      ],
+    },
+  ],
 }
 
 export const MOBILE_NAV: Partial<Record<Role, NavItem[]>> = {

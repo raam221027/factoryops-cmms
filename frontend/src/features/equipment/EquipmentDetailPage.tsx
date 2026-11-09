@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Pencil, Printer } from 'lucide-react'
-import { useMemo, type ReactNode } from 'react'
-import { Link, useParams } from 'react-router'
+import { Pencil, Plus, Printer } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
 import { EquipmentStatusBadge, PriorityBadge, WorkOrderStatusBadge } from '@/components/shared/badges'
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable'
+import { Detail } from '@/components/shared/Detail'
 import { KpiCard } from '@/components/shared/KpiCard'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { QrCode } from '@/components/shared/QrCode'
@@ -12,26 +13,36 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { Role } from '@/domain/enums'
 import { downtimeHours, mttrHours } from '@/domain/metrics'
+import { hasPermission, ROLE_HOME } from '@/domain/permissions'
 import type { EquipmentDowntime, PmSchedule, WorkOrder } from '@/domain/types'
 import { isOpen, isOverdue, toIsoDate } from '@/domain/workOrderRules'
 import { useDowntimes, useLookups, usePmSchedules } from '@/features/shared/queries'
+import { useSessionUser } from '@/features/auth/context'
 import { useWorkOrders } from '@/features/work-orders/hooks'
+import { WorkOrderFormDialog } from '@/features/work-orders/WorkOrderFormDialog'
 import { equipmentQrUrl, lastDays } from '@/lib/dateRange'
 import { formatDate, formatDateTime, formatHours } from '@/lib/format'
 import { services } from '@/services'
 
-function Detail({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm">{children || '—'}</dd>
-    </div>
-  )
+/** Roles with a work order screen to drill into from the maintenance history. */
+const WORK_ORDER_PATH: Partial<Record<Role, (id: string) => string>> = {
+  Supervisor: (id) => `/supervisor/work-orders/${id}`,
 }
 
+/**
+ * Equipment record with history, downtime and PM. Shared by the admin asset register and the
+ * supervisor's equipment monitor; management actions appear only for roles allowed to use them.
+ */
 export function EquipmentDetailPage() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
+  const { role } = useSessionUser()
+  const base = `${ROLE_HOME[role]}/equipment`
+  const canManage = hasPermission(role, 'equipment.manage')
+  const workOrderPath = WORK_ORDER_PATH[role]
+  const [creating, setCreating] = useState(false)
   const equipment = useQuery({ queryKey: ['equipment', 'detail', id], queryFn: () => services.equipment.get(id) })
   const workOrders = useWorkOrders({ equipmentId: id })
   const downtimes = useDowntimes()
@@ -94,19 +105,28 @@ export function EquipmentDetailPage() {
             <Badge tone={e.criticality === 'High' ? 'warning' : 'neutral'}>{e.criticality} criticality</Badge>
           </span>
         }
-        breadcrumbs={[{ label: 'Equipment', to: '/admin/equipment' }, { label: e.assetId }]}
+        breadcrumbs={[{ label: 'Equipment', to: base }, { label: e.assetId }]}
         actions={
           <>
-            <Button variant="outline" asChild>
-              <Link to={`/admin/equipment/labels?ids=${e.id}`}>
-                <Printer /> Print label
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link to={`/admin/equipment/${e.id}/edit`}>
-                <Pencil /> Edit
-              </Link>
-            </Button>
+            {canManage && (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to={`/admin/equipment/labels?ids=${e.id}`}>
+                    <Printer /> Print label
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link to={`/admin/equipment/${e.id}/edit`}>
+                    <Pencil /> Edit
+                  </Link>
+                </Button>
+              </>
+            )}
+            {workOrderPath && e.status !== 'Retired' && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus /> New work order
+              </Button>
+            )}
           </>
         }
       />
@@ -166,7 +186,7 @@ export function EquipmentDetailPage() {
             <TabsTrigger value="pm">PM schedules ({ownSchedules.length})</TabsTrigger>
           </TabsList>
           <TabsContent value="history" className="pt-0">
-            <DataTable data={workOrders.data} columns={woColumns} getRowId={(w) => w.id} loading={workOrders.isPending} error={workOrders.error} emptyTitle="No work orders for this asset" initialSorting={[{ id: 'createdAtUtc', desc: true }]} pageSize={10} />
+            <DataTable data={workOrders.data} columns={woColumns} getRowId={(w) => w.id} loading={workOrders.isPending} error={workOrders.error} onRowClick={workOrderPath ? (w) => navigate(workOrderPath(w.id)) : undefined} emptyTitle="No work orders for this asset" initialSorting={[{ id: 'createdAtUtc', desc: true }]} pageSize={10} />
           </TabsContent>
           <TabsContent value="downtime" className="pt-0">
             <DataTable data={downtimes.data ? ownDowntime : undefined} columns={downtimeColumns} getRowId={(d) => d.id} error={downtimes.error} emptyTitle="No recorded downtime" pageSize={10} />
@@ -176,6 +196,9 @@ export function EquipmentDetailPage() {
           </TabsContent>
         </Tabs>
       </Card>
+      {workOrderPath && (
+        <WorkOrderFormDialog open={creating} onOpenChange={setCreating} preset={{ equipmentId: e.id }} onCreated={(wo) => navigate(workOrderPath(wo.id))} />
+      )}
     </>
   )
 }

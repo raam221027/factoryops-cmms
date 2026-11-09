@@ -6,7 +6,6 @@ import { DESKTOP_NAV, MOBILE_NAV } from '@/config/navigation'
 import { ROLES } from '@/domain/enums'
 import { RequireRole } from '@/features/auth/RequireRole'
 import { OperatorHome } from './operator/OperatorHome'
-import { SupervisorHome } from './supervisor/SupervisorHome'
 import { TechnicianHome } from './technician/TechnicianHome'
 
 /*
@@ -28,7 +27,7 @@ export const adminRoutes: RouteObject = {
     { path: 'reports', lazy: page(() => import('./admin/reports/ReportsPage'), (m) => m.ReportsPage) },
     { path: 'equipment', lazy: page(() => import('./admin/equipment/EquipmentListPage'), (m) => m.EquipmentListPage) },
     { path: 'equipment/new', lazy: page(() => import('./admin/equipment/EquipmentFormPage'), (m) => m.EquipmentFormPage) },
-    { path: 'equipment/:id', lazy: page(() => import('./admin/equipment/EquipmentDetailPage'), (m) => m.EquipmentDetailPage) },
+    { path: 'equipment/:id', lazy: page(() => import('@/features/equipment/EquipmentDetailPage'), (m) => m.EquipmentDetailPage) },
     { path: 'equipment/:id/edit', lazy: page(() => import('./admin/equipment/EquipmentFormPage'), (m) => m.EquipmentFormPage) },
     { path: 'pm', lazy: page(() => import('./admin/pm/PmPage'), (m) => m.PmPage) },
     { path: 'inventory', lazy: page(() => import('./admin/inventory/InventoryPage'), (m) => m.InventoryPage) },
@@ -72,7 +71,17 @@ export const supervisorRoutes: RouteObject = {
       <DesktopShell sections={DESKTOP_NAV.Supervisor ?? []} workspaceLabel="Maintenance planning" />
     </RequireRole>
   ),
-  children: [{ index: true, element: <SupervisorHome /> }],
+  children: [
+    { index: true, lazy: page(() => import('./supervisor/dashboard/SupervisorDashboard'), (m) => m.SupervisorDashboard) },
+    { path: 'requests', lazy: page(() => import('./supervisor/requests/RequestsPage'), (m) => m.RequestsPage) },
+    { path: 'work-orders', lazy: page(() => import('./supervisor/work-orders/WorkOrdersPage'), (m) => m.WorkOrdersPage) },
+    { path: 'work-orders/:id', lazy: page(() => import('./supervisor/work-orders/WorkOrderDetailPage'), (m) => m.WorkOrderDetailPage) },
+    { path: 'board', lazy: page(() => import('./supervisor/board/BoardPage'), (m) => m.BoardPage) },
+    { path: 'schedule', lazy: page(() => import('./supervisor/schedule/SchedulePage'), (m) => m.SchedulePage) },
+    { path: 'technicians', lazy: page(() => import('./supervisor/technicians/TechniciansPage'), (m) => m.TechniciansPage) },
+    { path: 'equipment', lazy: page(() => import('./supervisor/equipment/EquipmentMonitorPage'), (m) => m.EquipmentMonitorPage) },
+    { path: 'equipment/:id', lazy: page(() => import('@/features/equipment/EquipmentDetailPage'), (m) => m.EquipmentDetailPage) },
+  ],
 }
 
 export const technicianRoutes: RouteObject = {

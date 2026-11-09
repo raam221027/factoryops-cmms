@@ -13,6 +13,7 @@ import { services } from '@/services'
 /** Where a scanned equipment QR code takes each role. Roles without a target go home. */
 const TARGET: Partial<Record<Role, (e: Equipment) => string>> = {
   Admin: (e) => `/admin/equipment/${e.id}`,
+  Supervisor: (e) => `/supervisor/equipment/${e.id}`,
 }
 
 /**

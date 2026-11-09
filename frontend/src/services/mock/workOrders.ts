@@ -49,6 +49,27 @@ function transition(wo: WorkOrder, to: WorkOrderStatus) {
   wo.status = to
 }
 
+/** Sets or clears the technician, keeping status, log and notification in step. */
+function applyAssignment(d: DemoDb, wo: WorkOrder, by: User, assigneeId: string | null) {
+  if (wo.status === 'InProgress' || !isOpen(wo)) {
+    throw new ApiError('conflict', 'Only work that has not started can be reassigned.')
+  }
+  if (assigneeId) {
+    const tech = findOrThrow(d.users, assigneeId, 'Technician')
+    if (tech.role !== 'Technician' || !tech.active) throw new ApiError('validation', 'Work can only be assigned to an active technician.')
+    if (wo.assigneeId === assigneeId) return
+    wo.assigneeId = assigneeId
+    if (wo.status === 'New' || wo.status === 'Pending') wo.status = 'Assigned'
+    addLog(d, wo, by.id, 'Assigned', `Assigned to ${tech.name}`)
+    notifyAssignment(d, wo, tech.id)
+  } else {
+    if (!wo.assigneeId) return
+    wo.assigneeId = undefined
+    if (wo.status === 'Assigned') wo.status = 'Pending'
+    addLog(d, wo, by.id, 'Assigned', 'Technician unassigned')
+  }
+}
+
 function advancePmSchedule(d: DemoDb, wo: WorkOrder) {
   const s = wo.pmScheduleId ? d.pmSchedules.find((x) => x.id === wo.pmScheduleId) : undefined
   if (!s) return
@@ -126,8 +147,18 @@ export const mockWorkOrders: WorkOrderService = {
       const user = authorize(d, 'workorder.edit')
       const wo = findOrThrow(d.workOrders, id, 'Work order')
       if (!isOpen(wo)) throw new ApiError('conflict', 'Closed work orders cannot be edited.')
-      Object.assign(wo, Object.fromEntries(Object.entries(input).filter(([, v]) => v !== undefined)))
-      addLog(d, wo, user.id, 'Updated', 'Work order details updated')
+      const { title, description, priority, scheduledDate, dueDate, instructions, partsRequired } = input
+      if (title !== undefined && title.trim().length < 3) throw new ApiError('validation', 'Give the work order a title.')
+      const changes = { title: title?.trim(), description, priority, scheduledDate, dueDate, instructions, partsRequired }
+      // Name what changed so the history is useful, e.g. "Priority Medium → High".
+      const described: [keyof typeof changes, string][] = [['priority', 'Priority'], ['dueDate', 'Due date'], ['scheduledDate', 'Planned day'], ['title', 'Title']]
+      const summary = described
+        .filter(([k]) => changes[k] !== undefined && changes[k] !== wo[k])
+        .map(([k, label]) => (k === 'title' ? 'Title changed' : `${label} ${wo[k] ?? 'none'} → ${changes[k]}`))
+      const other = (['description', 'instructions', 'partsRequired'] as const).filter((k) => changes[k] !== undefined && JSON.stringify(changes[k]) !== JSON.stringify(wo[k] ?? ''))
+      if (other.length) summary.push(`Updated ${other.map((k) => (k === 'partsRequired' ? 'parts list' : k)).join(', ')}`)
+      Object.assign(wo, Object.fromEntries(Object.entries(changes).filter(([, v]) => v !== undefined)))
+      if (summary.length) addLog(d, wo, user.id, 'Updated', summary.join(' · '))
       return wo
     }),
 
@@ -135,21 +166,27 @@ export const mockWorkOrders: WorkOrderService = {
     write((d) => {
       const user = authorize(d, 'workorder.assign')
       const wo = findOrThrow(d.workOrders, id, 'Work order')
-      if (wo.status === 'InProgress' || !isOpen(wo)) {
-        throw new ApiError('conflict', 'Only work that has not started can be reassigned.')
-      }
-      if (assigneeId) {
-        const tech = findOrThrow(d.users, assigneeId, 'Technician')
-        if (tech.role !== 'Technician' || !tech.active) throw new ApiError('validation', 'Work can only be assigned to an active technician.')
-        wo.assigneeId = assigneeId
-        if (wo.status === 'New' || wo.status === 'Pending') wo.status = 'Assigned'
-        wo.scheduledDate ??= toIsoDate(new Date())
-        addLog(d, wo, user.id, 'Assigned', `Assigned to ${tech.name}`)
-        notifyAssignment(d, wo, tech.id)
-      } else {
-        wo.assigneeId = undefined
-        if (wo.status === 'Assigned') wo.status = 'Pending'
-        addLog(d, wo, user.id, 'Assigned', 'Technician unassigned')
+      applyAssignment(d, wo, user, assigneeId)
+      if (assigneeId) wo.scheduledDate ??= toIsoDate(new Date())
+      return wo
+    }),
+
+  plan: (id, input) =>
+    write((d) => {
+      const user = authorize(d, 'workorder.assign')
+      const wo = findOrThrow(d.workOrders, id, 'Work order')
+      if (!isOpen(wo)) throw new ApiError('conflict', 'Closed work orders cannot be rescheduled.')
+      if (input.scheduledDate && !/^\d{4}-\d{2}-\d{2}$/.test(input.scheduledDate)) throw new ApiError('validation', 'Scheduled date is not a valid date.')
+      const reassigned = (input.assigneeId ?? undefined) !== wo.assigneeId
+      if (reassigned) applyAssignment(d, wo, user, input.assigneeId)
+      const scheduled = input.scheduledDate ?? undefined
+      if (scheduled !== wo.scheduledDate) {
+        wo.scheduledDate = scheduled
+        addLog(d, wo, user.id, 'Updated', scheduled ? `Scheduled for ${scheduled}` : 'Removed from the schedule')
+        // A newly assigned technician already gets the assignment notice.
+        if (scheduled && wo.assigneeId && !reassigned) {
+          notifyUser(d, wo.assigneeId, 'Work rescheduled', `${wo.number} is now planned for ${scheduled}`, `/tech/jobs/${wo.id}`)
+        }
       }
       return wo
     }),
@@ -165,7 +202,10 @@ export const mockWorkOrders: WorkOrderService = {
       const from = wo.status
       transition(wo, status)
       addLog(d, wo, user.id, status === 'Cancelled' ? 'Cancelled' : 'StatusChanged', note ? `${from} → ${status}: ${note}` : `${from} → ${status}`)
-      if (status === 'Cancelled') releaseEquipmentIfClear(d, wo.equipmentId, wo.id)
+      if (status === 'Cancelled') {
+        releaseEquipmentIfClear(d, wo.equipmentId, wo.id)
+        if (wo.assigneeId) notifyUser(d, wo.assigneeId, 'Work order cancelled', `${wo.number}: ${note ?? wo.title}`, `/tech/jobs/${wo.id}`)
+      }
       return wo
     }),
 

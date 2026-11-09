@@ -115,7 +115,15 @@ export interface WorkOrderCreateInput {
   partsRequired?: PartLine[]
 }
 
-export type WorkOrderUpdateInput = Partial<Omit<WorkOrderCreateInput, 'type' | 'equipmentId' | 'checklist'>>
+/** Assignment changes go through `assign`/`plan` so the status, log and notification stay consistent. */
+export type WorkOrderUpdateInput = Partial<Omit<WorkOrderCreateInput, 'type' | 'equipmentId' | 'checklist' | 'assigneeId'>>
+
+export interface PlanWorkOrderInput {
+  /** Technician to do the work; null leaves it unassigned */
+  assigneeId: Id | null
+  /** Day the work is planned for; null takes it off the schedule */
+  scheduledDate: IsoDate | null
+}
 
 export interface CompleteWorkOrderInput {
   laborHours: number
@@ -137,6 +145,8 @@ export interface WorkOrderService {
   create(input: WorkOrderCreateInput): Promise<WorkOrder>
   update(id: Id, input: WorkOrderUpdateInput): Promise<WorkOrder>
   assign(id: Id, assigneeId: Id | null): Promise<WorkOrder>
+  /** Sets technician and planned day in one step (scheduling board, assignment dialog). */
+  plan(id: Id, input: PlanWorkOrderInput): Promise<WorkOrder>
   /** Planning transitions (New/Pending/Assigned/Cancelled). Execution uses start/pause/resume/complete. */
   changeStatus(id: Id, status: WorkOrderStatus, note?: string): Promise<WorkOrder>
   start(id: Id): Promise<WorkOrder>

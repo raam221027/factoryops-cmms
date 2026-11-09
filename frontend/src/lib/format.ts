@@ -19,7 +19,9 @@ export function formatRelativeDay(iso?: string): string {
 }
 
 export function formatAgo(iso?: string): string {
-  return iso ? `${formatDistanceToNowStrict(parseISO(iso))} ago` : '—'
+  if (!iso) return '—'
+  const d = parseISO(iso)
+  return Date.now() - d.getTime() < 60_000 ? 'just now' : `${formatDistanceToNowStrict(d)} ago`
 }
 
 export function formatHours(hours: number | null | undefined): string {
