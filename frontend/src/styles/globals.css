@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Short viewports (phones in landscape): compact the mobile header, bars and navigation */
+@custom-variant short (@media (max-height: 480px));
+
 /*
  * FactoryOps design tokens. Components reference these semantic tokens
  * (bg-primary, text-muted-foreground, border-border, bg-success-soft…), never raw colors.
@@ -125,4 +128,21 @@
 /* Safe-area padding for the mobile bottom navigation on notched devices */
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Installed app on notched phones: keep headers clear of the status bar */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Respect the OS "reduce motion" setting everywhere (spinners, pulses, transitions) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

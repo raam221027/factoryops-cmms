@@ -1,4 +1,4 @@
-import { LogOut, RefreshCcw, Repeat, UserRound } from 'lucide-react'
+import { Download, LogOut, RefreshCcw, Repeat, UserRound } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Avatar } from '@/components/ui/misc'
 import { ROLE_LABELS } from '@/domain/enums'
 import { useAuth, useSessionUser } from '@/features/auth/context'
+import { useInstallPrompt } from '@/features/pwa/browser'
 import { cn } from '@/lib/utils'
 
 export function UserMenu({ profilePath, compact = false }: { profilePath?: string; compact?: boolean }) {
@@ -14,6 +15,7 @@ export function UserMenu({ profilePath, compact = false }: { profilePath?: strin
   const { signOut, demo } = useAuth()
   const navigate = useNavigate()
   const [confirmReset, setConfirmReset] = useState(false)
+  const install = useInstallPrompt()
 
   async function handleSignOut() {
     await signOut()
@@ -41,6 +43,11 @@ export function UserMenu({ profilePath, compact = false }: { profilePath?: strin
           {profilePath && (
             <DropdownMenuItem onSelect={() => navigate(profilePath)}>
               <UserRound /> My profile
+            </DropdownMenuItem>
+          )}
+          {install && (
+            <DropdownMenuItem onSelect={() => void install().then((ok) => ok && toast.success('FactoryOps installed'))}>
+              <Download /> Install app on this device
             </DropdownMenuItem>
           )}
           {demo && (

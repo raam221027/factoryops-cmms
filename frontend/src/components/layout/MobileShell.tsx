@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import type { NavItem } from '@/config/navigation'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
+import { ConnectivityBanner } from '@/features/pwa/PwaPrompts'
 import { cn } from '@/lib/utils'
 import { DemoBadge } from './DemoBadge'
 import { Logo } from './Logo'
@@ -16,8 +17,8 @@ export function MobileShell({ items, profilePath, highlight, headerAction }: { i
   const showNav = items.length > 1
   return (
     <div className="min-h-dvh bg-background">
-      <header className="sticky top-0 z-30 border-b bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-2xl items-center gap-2 px-4">
+      <header className="pt-safe sticky top-0 z-30 border-b bg-surface/95 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-2xl items-center gap-2 px-4 short:h-12">
           <Logo />
           <DemoBadge />
           <div className="ml-auto flex items-center gap-1">
@@ -26,9 +27,10 @@ export function MobileShell({ items, profilePath, highlight, headerAction }: { i
             <UserMenu profilePath={profilePath} compact />
           </div>
         </div>
+        <ConnectivityBanner />
       </header>
 
-      <main id="main" className={cn('mx-auto w-full max-w-2xl px-4 py-4', showNav && 'pb-28')}>
+      <main id="main" className={cn('mx-auto w-full max-w-2xl px-4 py-4 short:py-3', showNav && 'pb-28 short:pb-16')}>
         <Outlet />
       </main>
 
@@ -44,7 +46,7 @@ export function MobileShell({ items, profilePath, highlight, headerAction }: { i
                     end={item.end}
                     className={({ isActive }) =>
                       cn(
-                        'flex h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground',
+                        'flex h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground short:h-12',
                         isActive && 'text-primary',
                       )
                     }
@@ -54,13 +56,13 @@ export function MobileShell({ items, profilePath, highlight, headerAction }: { i
                         <span
                           className={cn(
                             'flex items-center justify-center rounded-full',
-                            isHighlight ? 'size-11 -mt-5 bg-primary text-primary-foreground shadow-popover ring-4 ring-surface' : 'h-7 w-12',
+                            isHighlight ? 'size-11 -mt-5 bg-primary text-primary-foreground shadow-popover ring-4 ring-surface short:mt-0 short:size-9 short:ring-0' : 'h-7 w-12',
                             !isHighlight && isActive && 'bg-primary-soft',
                           )}
                         >
                           <item.icon className="size-5" aria-hidden />
                         </span>
-                        {item.label}
+                        <span className="short:sr-only">{item.label}</span>
                       </>
                     )}
                   </NavLink>

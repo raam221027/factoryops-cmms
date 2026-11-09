@@ -13,7 +13,7 @@ export function DateRangePicker({ value, onChange, presets = RANGE_PRESETS, show
 
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
-      <div className="inline-flex rounded-md border bg-surface p-0.5" role="group" aria-label="Date range">
+      <div className="flex max-w-full flex-wrap rounded-md border bg-surface p-0.5" role="group" aria-label="Date range">
         {presets.map((p) => (
           <button
             key={p.days}
@@ -27,11 +27,11 @@ export function DateRangePicker({ value, onChange, presets = RANGE_PRESETS, show
         ))}
       </div>
       {showCustom && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="flex w-full items-center gap-1.5 text-xs text-muted-foreground sm:w-auto">
           <Input
             type="date"
             aria-label="From date"
-            className="h-8 w-36"
+            className="h-8 w-0 min-w-0 flex-1 sm:w-36 sm:flex-none"
             value={format(value.from, 'yyyy-MM-dd')}
             max={format(value.to, 'yyyy-MM-dd')}
             onChange={(e) => e.target.value && onChange({ from: startOfDay(parseISO(e.target.value)), to: value.to })}
@@ -40,7 +40,7 @@ export function DateRangePicker({ value, onChange, presets = RANGE_PRESETS, show
           <Input
             type="date"
             aria-label="To date"
-            className="h-8 w-36"
+            className="h-8 w-0 min-w-0 flex-1 sm:w-36 sm:flex-none"
             value={format(value.to, 'yyyy-MM-dd')}
             min={format(value.from, 'yyyy-MM-dd')}
             onChange={(e) => e.target.value && onChange({ from: value.from, to: endOfDay(parseISO(e.target.value)) })}

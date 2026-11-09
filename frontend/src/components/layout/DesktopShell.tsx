@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogTitle, SheetContent } from '@/components/ui/dialog'
 import type { NavSection } from '@/config/navigation'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
+import { ConnectivityBanner } from '@/features/pwa/PwaPrompts'
 import { cn } from '@/lib/utils'
 import { DemoBadge } from './DemoBadge'
 import { Logo } from './Logo'
@@ -80,7 +81,7 @@ export function DesktopShell({ sections, workspaceLabel, profilePath }: { sectio
         </SheetContent>
       </Dialog>
 
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-surface/95 px-3 backdrop-blur sm:px-5">
+      <header className="pt-safe sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-2 border-b bg-surface/95 px-3 backdrop-blur sm:px-5">
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Open navigation">
           <Menu />
         </Button>
@@ -92,6 +93,7 @@ export function DesktopShell({ sections, workspaceLabel, profilePath }: { sectio
           <UserMenu profilePath={profilePath} />
         </div>
       </header>
+      <ConnectivityBanner className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20" />
 
       <main id="main" className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6 lg:py-6">
         <Outlet />

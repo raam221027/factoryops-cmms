@@ -110,7 +110,7 @@ export function EquipmentMonitorPage() {
                   {g.label}
                   <span className="text-xs font-normal text-muted-foreground">{lookups.departments.get(g.items[0].e.departmentId)?.name}</span>
                 </h2>
-                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                   {g.items.map((t) => (
                     <li key={t.e.id}>
                       <EquipmentTile t={t} lookups={lookups} />

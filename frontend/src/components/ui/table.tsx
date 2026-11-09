@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils'
 
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto">
+    // relative: keeps the hidden inputs of Radix switches/checkboxes inside the scroll area
+    <div className="relative w-full overflow-x-auto">
       <table className={cn('w-full caption-bottom border-collapse text-sm', className)} {...props} />
     </div>
   )

@@ -12,7 +12,8 @@ export function DemoBadge({ className }: { className?: string }) {
       title="Development demo: sample data stored in this browser, demo sign-in enabled"
     >
       <FlaskConical className="size-3" aria-hidden />
-      Demo
+      {/* Icon only on the narrowest phones, where the header has no room to spare */}
+      <span className="max-[359px]:sr-only">Demo</span>
     </span>
   )
 }

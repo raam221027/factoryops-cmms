@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router'
 import { EquipmentStatusBadge, OverdueBadge, PriorityBadge, WorkOrderStatusBadge } from '@/components/shared/badges'
 import { ErrorState, ListSkeleton } from '@/components/shared/states'
 import { Badge } from '@/components/ui/badge'
+import { StickyActionBar } from '@/components/layout/StickyActionBar'
 import { Button } from '@/components/ui/button'
 import type { WorkOrder } from '@/domain/types'
 import { isOpen, isOverdue } from '@/domain/workOrderRules'
@@ -133,9 +134,7 @@ export function JobDetailPage() {
       </div>
 
       {/* Primary action, kept within thumb reach above the bottom navigation */}
-      <div className="h-20" aria-hidden />
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 border-t bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl gap-2 px-4 py-2.5">
+      <StickyActionBar>
           {wo.status === 'Assigned' && (
             <Button size="touch" variant="success" className="flex-1" loading={start.isPending} onClick={() => start.mutate(undefined)}>
               <Play /> Start job
@@ -161,8 +160,7 @@ export function JobDetailPage() {
               <Link to="/tech/jobs">Back to my jobs</Link>
             </Button>
           ) : null}
-        </div>
-      </div>
+      </StickyActionBar>
 
       <PauseSheet wo={wo} open={pausing} onOpenChange={setPausing} />
       <CompleteSheet

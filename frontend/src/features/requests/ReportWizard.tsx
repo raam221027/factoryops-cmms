@@ -1,6 +1,7 @@
 import { CheckCircle2, ChevronLeft, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useBlocker, useNavigate } from 'react-router'
+import { StickyActionBar } from '@/components/layout/StickyActionBar'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { PriorityBadge } from '@/components/shared/badges'
 import { Button } from '@/components/ui/button'
@@ -143,9 +144,7 @@ export function ReportWizard({
         </>
       )}
 
-      <div className="h-20" aria-hidden />
-      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 border-t bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl gap-2 px-4 py-2.5">
+      <StickyActionBar>
           {step < STEPS.length - 1 ? (
             <Button size="touch" className="flex-1" disabled={!canNext} onClick={() => setStep(step + 1)}>
               Next: {STEPS[step + 1]}
@@ -164,8 +163,7 @@ export function ReportWizard({
               Send report
             </Button>
           )}
-        </div>
-      </div>
+      </StickyActionBar>
 
       <ConfirmDialog
         open={blocker.state === 'blocked'}

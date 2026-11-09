@@ -40,6 +40,25 @@ The frontend currently runs on in-browser demo data (`VITE_DATA_SOURCE=mock`, se
 off in production builds unless `VITE_DEMO_AUTH=true` is set explicitly, and it is not a
 security boundary: the API must enforce authorization.
 
+#### Installable app (PWA)
+
+Production builds register a service worker and a web app manifest, so the app can be
+installed on phones, tablets and shared kiosks (account menu → "Install app on this device",
+or Share → Add to Home Screen on iOS). The service worker is not active under `npm run dev`;
+to try it locally:
+
+```sh
+VITE_DEMO_AUTH=true npm run build && npm run preview   # http://localhost:4173
+```
+
+- The app shell and every screen are precached, so the app opens without a connection and
+  shows an offline banner. Demo data lives on the device and keeps working offline; with the
+  API, reads show the last loaded data and writes need a connection.
+- API responses are never cached by the service worker.
+- New versions are not applied silently: users get an "Update now" prompt, so nobody loses a
+  half-filled form. Open apps check for updates hourly.
+- Installed apps and the camera (QR scanning) require HTTPS outside `localhost`.
+
 Frontend layout (`frontend/src`):
 
 ```

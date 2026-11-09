@@ -101,7 +101,7 @@ export function LoginPage() {
     : []
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background lg:flex-row">
+    <div className="pt-safe flex min-h-dvh flex-col bg-background lg:flex-row">
       <aside className="hidden flex-col justify-between bg-sidebar p-10 text-sidebar-foreground lg:flex lg:w-[420px]">
         <Logo inverted />
         <div>
