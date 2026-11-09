@@ -74,3 +74,10 @@ features/     domain features (auth, work orders, notifications, …)
 roles/        route trees and screens per role experience
 components/   ui primitives, shared components, layouts
 ```
+
+## License
+
+Copyright (c) 2026 Joemar Quest. All rights reserved. See [LICENSE](LICENSE).
+
+The source is published for viewing only. Viewing it on GitHub does not grant a license to use,
+copy, modify or distribute the code; contact the author for permission.
