@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\factoryops-cmms.Application\factoryops-cmms.Application.csproj" />
-    <ProjectReference Include="..\factoryops-cmms.Infrastructure\factoryops-cmms.Infrastructure.csproj" />
+    <ProjectReference Include="..\factoryops.Application\factoryops.Application.csproj" />
+    <ProjectReference Include="..\factoryops.Infrastructure\factoryops.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

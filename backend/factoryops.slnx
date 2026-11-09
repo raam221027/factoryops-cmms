@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/factoryops.Tests/">
+    <Project Path="factoryops.Tests/factoryops.Tests.csproj" />
+  </Folder>
+  <Project Path="factoryops.API/factoryops.API.csproj" />
+  <Project Path="factoryops.Application/factoryops.Application.csproj" />
+  <Project Path="factoryops.Domain/factoryops.Domain.csproj" />
+  <Project Path="factoryops.Infrastructure/factoryops.Infrastructure.csproj" />
+</Solution>
