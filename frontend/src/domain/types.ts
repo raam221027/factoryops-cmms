@@ -236,6 +236,8 @@ export interface SystemSettings {
   requestPrefix: string
   /** Target completion time in hours per priority, used to derive due dates */
   prioritySlaHours: Record<Priority, number>
+  /** Blended technician labor cost per hour, for cost reporting */
+  laborRatePerHour: number
   notifyOnNewRequest: boolean
   notifyOnAssignment: boolean
   notifyOnOverdue: boolean

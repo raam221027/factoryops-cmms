@@ -52,12 +52,12 @@ export function mttrHours(workOrders: WorkOrder[], range?: DateRange): number | 
 }
 
 /**
- * Preventive maintenance compliance: share of preventive work orders due in the range
- * that were completed on or before their due date.
+ * Preventive maintenance compliance: share of preventive work orders due in the range that were
+ * completed on or before their due date. Work due today is not counted yet; it still has time.
  */
 export function pmCompliance(workOrders: WorkOrder[], range?: DateRange, today = new Date()): number | null {
   const due = workOrders.filter(
-    (wo) => wo.type === 'Preventive' && wo.status !== 'Cancelled' && wo.dueDate && inRange(wo.dueDate, range) && parseISO(wo.dueDate) <= today,
+    (wo) => wo.type === 'Preventive' && wo.status !== 'Cancelled' && wo.dueDate && inRange(wo.dueDate, range) && wo.dueDate < toIsoDate(today),
   )
   if (due.length === 0) return null
   const onTime = due.filter((wo) => wo.status === 'Completed' && wo.completedAtUtc && wo.completedAtUtc.slice(0, 10) <= wo.dueDate!)

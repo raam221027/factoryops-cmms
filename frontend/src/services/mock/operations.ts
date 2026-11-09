@@ -4,7 +4,7 @@ import { isOpen } from '@/domain/workOrderRules'
 import { newId } from '@/lib/id'
 import type { DowntimeService, InventoryService, NotificationService, PmService, SettingsService } from '../contracts'
 import { ApiError } from '../errors'
-import { addLog, nextWorkOrderNumber, notifyRole, notifyUser, nowIso } from './effects'
+import { addLog, nextWorkOrderNumber, notifyAssignment, notifyRole, nowIso } from './effects'
 import type { DemoDb } from './schema'
 import { actor, authorize, findOrThrow, read, write } from './store'
 
@@ -64,7 +64,7 @@ export const mockPm: PmService = {
       }
       d.workOrders.unshift(wo)
       addLog(d, wo, user.id, 'Created', `Generated from PM schedule "${s.name}"`)
-      if (wo.assigneeId) notifyUser(d, wo.assigneeId, 'Preventive maintenance assigned', `${wo.number}: ${wo.title}`, `/tech/jobs/${wo.id}`)
+      if (wo.assigneeId) notifyAssignment(d, wo, wo.assigneeId, 'Preventive maintenance assigned')
       return wo
     }),
 }
@@ -133,6 +133,10 @@ export const mockSettings: SettingsService = {
       authorize(d, 'settings.manage')
       if (!/^[A-Z]{1,5}$/.test(input.workOrderPrefix) || !/^[A-Z]{1,5}$/.test(input.requestPrefix)) {
         throw new ApiError('validation', 'Prefixes must be 1–5 uppercase letters.')
+      }
+      if (!(input.laborRatePerHour >= 0)) throw new ApiError('validation', 'Labor rate cannot be negative.')
+      if (Object.values(input.prioritySlaHours).some((h) => !Number.isFinite(h) || h <= 0)) {
+        throw new ApiError('validation', 'Target hours must be greater than zero.')
       }
       return Object.assign(d.settings, input)
     }),

@@ -19,6 +19,11 @@ export function notifyUser(d: DemoDb, userId: Id, title: string, body: string, l
   d.notifications.unshift({ id: newId(), userId, title, body, link, atUtc: nowIso(), read: false })
 }
 
+/** Tells a technician about new work, if assignment notifications are enabled. */
+export function notifyAssignment(d: DemoDb, wo: WorkOrder, technicianId: Id, title = 'New work order assigned') {
+  if (d.settings.notifyOnAssignment) notifyUser(d, technicianId, title, `${wo.number}: ${wo.title}`, `/tech/jobs/${wo.id}`)
+}
+
 export function notifyRole(d: DemoDb, role: Role, title: string, body: string, link?: string) {
   for (const u of d.users.filter((x) => x.role === role && x.active)) notifyUser(d, u.id, title, body, link)
 }

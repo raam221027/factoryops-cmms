@@ -1,6 +1,7 @@
-import { addDays, addMonths, addWeeks, parseISO } from 'date-fns'
+import { parseISO } from 'date-fns'
 import type { WorkOrderStatus } from '@/domain/enums'
 import { hasPermission } from '@/domain/permissions'
+import { addFrequency } from '@/domain/pm'
 import type { User, WorkOrder } from '@/domain/types'
 import { canTransition, dueDateForPriority, isOpen, toIsoDate } from '@/domain/workOrderRules'
 import { newId } from '@/lib/id'
@@ -11,6 +12,7 @@ import {
   addLog,
   markEquipmentUnderMaintenance,
   nextWorkOrderNumber,
+  notifyAssignment,
   notifyRole,
   notifyUser,
   nowIso,
@@ -53,8 +55,7 @@ function advancePmSchedule(d: DemoDb, wo: WorkOrder) {
   const done = toIsoDate(new Date())
   s.lastCompletedDate = done
   // Next due is measured from the planned due date so the schedule does not drift.
-  const base = parseISO(wo.dueDate ?? done)
-  const next = s.frequencyUnit === 'Day' ? addDays(base, s.frequencyInterval) : s.frequencyUnit === 'Week' ? addWeeks(base, s.frequencyInterval) : addMonths(base, s.frequencyInterval)
+  const next = addFrequency(parseISO(wo.dueDate ?? done), s.frequencyInterval, s.frequencyUnit)
   if (toIsoDate(next) > s.nextDueDate) s.nextDueDate = toIsoDate(next)
 }
 
@@ -115,7 +116,7 @@ export const mockWorkOrders: WorkOrderService = {
       addLog(d, wo, user.id, 'Created', 'Work order created')
       if (wo.assigneeId) {
         addLog(d, wo, user.id, 'Assigned', `Assigned to ${userName(d, wo.assigneeId)}`)
-        notifyUser(d, wo.assigneeId, 'New work order assigned', `${wo.number}: ${wo.title}`, `/tech/jobs/${wo.id}`)
+        notifyAssignment(d, wo, wo.assigneeId)
       }
       return wo
     }),
@@ -144,7 +145,7 @@ export const mockWorkOrders: WorkOrderService = {
         if (wo.status === 'New' || wo.status === 'Pending') wo.status = 'Assigned'
         wo.scheduledDate ??= toIsoDate(new Date())
         addLog(d, wo, user.id, 'Assigned', `Assigned to ${tech.name}`)
-        notifyUser(d, tech.id, 'New work order assigned', `${wo.number}: ${wo.title}`, `/tech/jobs/${wo.id}`)
+        notifyAssignment(d, wo, tech.id)
       } else {
         wo.assigneeId = undefined
         if (wo.status === 'Assigned') wo.status = 'Pending'

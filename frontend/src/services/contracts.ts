@@ -86,6 +86,8 @@ export interface UserService {
   create(input: UserInput): Promise<User>
   update(id: Id, input: UserInput): Promise<User>
   setActive(id: Id, active: boolean): Promise<User>
+  /** Most recent work log entries recorded by the user */
+  activity(id: Id, limit?: number): Promise<WorkLog[]>
 }
 
 export interface WorkOrderFilter {

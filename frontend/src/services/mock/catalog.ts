@@ -177,4 +177,13 @@ export const mockUsers: UserService = {
       u.active = active
       return u
     }),
+  activity: (id, limit = 25) =>
+    read((d) => {
+      authorize(d, 'user.manage')
+      findOrThrow(d.users, id, 'User')
+      return d.workLogs
+        .filter((l) => l.userId === id)
+        .sort((a, b) => b.atUtc.localeCompare(a.atUtc))
+        .slice(0, limit)
+    }),
 }

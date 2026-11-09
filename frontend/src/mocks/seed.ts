@@ -302,7 +302,7 @@ export function createSeed(now: Date = new Date()): DemoDb {
   const freqFor = (code: string): [number, FrequencyUnit] =>
     ({ CNC: [1, 'Month'], PRS: [1, 'Month'], CNV: [2, 'Week'], CMP: [3, 'Month'], PMP: [1, 'Month'], PKG: [2, 'Week'], ROB: [1, 'Month'], BLR: [1, 'Week'], HVC: [3, 'Month'], IMM: [1, 'Month'] })[code] as [number, FrequencyUnit]
   const addFrequency = (d: Date, n: number, unit: FrequencyUnit) => (unit === 'Day' ? addDays(d, n) : unit === 'Week' ? addWeeks(d, n) : addMonths(d, n))
-  const pmSchedules: PmSchedule[] = pmTargets.map((e) => {
+  const pmSchedules: PmSchedule[] = pmTargets.map((e, i) => {
     const code = categoryCodeOf(e)
     const [interval, unit] = freqFor(code)
     return {
@@ -311,7 +311,8 @@ export function createSeed(now: Date = new Date()): DemoDb {
       equipmentId: e.id,
       frequencyInterval: interval,
       frequencyUnit: unit,
-      nextDueDate: toIsoDate(addDays(today, int(-4, 21))),
+      // A few schedules are slightly overdue; the rest are coming up.
+      nextDueDate: toIsoDate(addDays(today, i % 6 === 0 ? int(-4, -1) : int(1, 21))),
       checklist: pmChecklists[code] ?? ['General inspection'],
       assigneeId: pick(technicians).id,
       estimatedHours: pick([1, 1.5, 2, 3, 4]),
@@ -616,6 +617,7 @@ export function createSeed(now: Date = new Date()): DemoDb {
       workOrderPrefix: 'WO',
       requestPrefix: 'MR',
       prioritySlaHours: slaHours,
+      laborRatePerHour: 45,
       notifyOnNewRequest: true,
       notifyOnAssignment: true,
       notifyOnOverdue: true,

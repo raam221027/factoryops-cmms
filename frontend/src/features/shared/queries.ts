@@ -57,6 +57,26 @@ export function useCategories() {
   return useQuery({ queryKey: ['org', 'categories'], queryFn: () => services.organization.listCategories(), staleTime: REFERENCE_STALE_MS })
 }
 
+export function useOrganization() {
+  return useQuery({ queryKey: ['org', 'organization'], queryFn: () => services.organization.getOrganization(), staleTime: REFERENCE_STALE_MS })
+}
+
+export function usePmSchedules() {
+  return useQuery({ queryKey: ['pm', 'schedules'], queryFn: () => services.pm.list() })
+}
+
+export function useParts() {
+  return useQuery({ queryKey: ['inventory', 'parts'], queryFn: () => services.inventory.listParts() })
+}
+
+export function useDowntimes() {
+  return useQuery({ queryKey: ['downtime'], queryFn: () => services.downtime.list() })
+}
+
+export function useSettings() {
+  return useQuery({ queryKey: ['settings'], queryFn: () => services.settings.get(), staleTime: REFERENCE_STALE_MS })
+}
+
 export interface Lookups {
   equipment: Map<string, Equipment>
   users: Map<string, User>

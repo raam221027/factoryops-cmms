@@ -5,7 +5,7 @@ import { newId } from '@/lib/id'
 import { PROBLEM_CATEGORY_LABELS } from '@/domain/enums'
 import type { RequestService } from '../contracts'
 import { ApiError } from '../errors'
-import { addLog, nextRequestNumber, nextWorkOrderNumber, notifyRole, notifyUser, nowIso, userName } from './effects'
+import { addLog, nextRequestNumber, nextWorkOrderNumber, notifyAssignment, notifyRole, notifyUser, nowIso, userName } from './effects'
 import { actor, authorize, findOrThrow, read, write } from './store'
 
 export const mockRequests: RequestService = {
@@ -102,7 +102,7 @@ export const mockRequests: RequestService = {
       addLog(d, wo, user.id, 'Created', `Created from request ${req.number}`)
       if (wo.assigneeId) {
         addLog(d, wo, user.id, 'Assigned', `Assigned to ${userName(d, wo.assigneeId)}`)
-        notifyUser(d, wo.assigneeId, 'New work order assigned', `${wo.number}: ${wo.title}`, `/tech/jobs/${wo.id}`)
+        notifyAssignment(d, wo, wo.assigneeId)
       }
       notifyUser(d, req.requestedById, 'Request approved', `${req.number} is now work order ${wo.number}`, '/operator/requests')
       return { request: req, workOrder: wo }
